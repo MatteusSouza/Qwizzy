@@ -1,0 +1,14 @@
+package com.example.askceny.data.types
+
+enum class ErrorCode {
+    INVALID_EMAIL,
+    WRONG_PASSWORD,
+    USER_DISABLED,
+    USER_NOT_FOUND,
+    EMAIL_ALREADY_IN_USE,
+    WEAK_PASSWORD,
+    NETWORK_ERROR,
+    ERROR_TOO_MANY_REQUESTS,
+    UNKNOWN_ERROR,
+    UNAUTHENTICATED
+}

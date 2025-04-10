@@ -20,7 +20,7 @@ class QuizViewModel(private val quizRepository: QuizRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
+            update()
             println("QUIZ_VIEW_MODEL: QUIZZES_SIZE ${quizzesState.value.size}")
         }
     }
@@ -60,6 +60,11 @@ class QuizViewModel(private val quizRepository: QuizRepository) : ViewModel() {
     fun setQuizInFocus(quiz: Quiz?) {
         quizInFocus = quiz
         println("QUIZ_DETAIL: QUIZ_VIEW_MODEL: Is quizInFocus null: ${quizInFocus == null}")
+    }
+
+    fun update() {
+        println("QuizViewModel: Update called")
+        _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
     }
 
     companion object {

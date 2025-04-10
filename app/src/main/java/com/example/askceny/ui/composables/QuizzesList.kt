@@ -1,5 +1,6 @@
 package com.example.askceny.ui.composables
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +42,7 @@ fun QuizzesList(
     onClickItem: () -> Unit,
     onClickAddQuiz: () -> Unit
 ) {
-
+    viewModel.update()
     val quizzesState by viewModel.quizzesState.collectAsState()
 
     Box(modifier = modifier
@@ -48,7 +51,7 @@ fun QuizzesList(
         LazyColumn (
             modifier = modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items (quizzesState.size) { index ->
                 val quiz = quizzesState[index]
@@ -109,8 +112,10 @@ fun QuizRow(viewModel: QuizViewModel, quizItem: Quiz, onClick: () -> Unit) {
                 .fillMaxWidth()
                 .padding(16.dp),
 //                .align(Alignment.CenterVertically),
-                fontSize = 22.sp,
-                text = quizItem.title
+                fontSize = 26.sp,
+                fontFamily = FontFamily.Default,
+                fontWeight = FontWeight.ExtraBold,
+                text = quizItem.title,
             )
             Text(modifier = Modifier
                 .fillMaxWidth()
@@ -118,6 +123,7 @@ fun QuizRow(viewModel: QuizViewModel, quizItem: Quiz, onClick: () -> Unit) {
 //                .align(Alignment.CenterVertically),
                 fontSize = 22.sp,
                 text = quizItem.description,
+                fontWeight = FontWeight.Light,
                 maxLines = 3
             )
         }

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +36,7 @@ fun CustomTopBar(
     onClickSearch: () -> Unit = { },
     onClickEdit: () -> Unit = { },
     onClickMenu: () -> Unit = { },
+    onClickLogout: () -> Unit = { },
     showBackButton: Boolean = false,
     showSearchButton: Boolean = false,
     showEditButton: Boolean = false,
@@ -103,6 +105,7 @@ fun CustomTopBar(
                     )
                 }
             }
+            TextButton(onClick = onClickLogout) { Text("Logout") } // Just for testing until the user screen is implemented and then it will be removed
         }
     }
 }

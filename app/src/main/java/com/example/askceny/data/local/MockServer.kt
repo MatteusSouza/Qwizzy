@@ -56,6 +56,8 @@ class MockServer(val database: MockDatabase) {
     }
 
     fun login(email: String, password: String): String? {
+        if (!isEmail(email))
+            throw AuthException(ErrorCode.INVALID_EMAIL)
         val user = userValidate(email, password)
         val token = UUID.randomUUID().toString()
         activeSessions[token] = user.id.toString()
@@ -131,38 +133,16 @@ class MockServer(val database: MockDatabase) {
         return token != null
     }
 
-    //TODO: Retorne o user
     private fun userValidate(email: String, password: String): User {
         val index = database.findIndexUserByEmail(email)
         if (index == null){
-            throw AuthException(ErrorCode.USER_NOT_FOUND)
+            throw AuthException(ErrorCode.ERROR_INVALID_CREDENTIAL)
         }
         val mockUser = database.users[index]
         if (password != mockUser.password) {
-            throw AuthException(ErrorCode.WRONG_PASSWORD)
+            throw AuthException(ErrorCode.ERROR_INVALID_CREDENTIAL)
         }
         return mockUser.toUser()
-
-        /* 2º backup, return Boolean
-        val index = database.findIndexUserByEmail(email)
-        if (index == null){
-            throw AuthException(ErrorCode.USER_NOT_FOUND)
-        }
-        val mockUser = database.users[index]
-        if (password != mockUser.password) {
-            throw AuthException(ErrorCode.WRONG_PASSWORD)
-        }else return true
-        */
-
-        /* // 1º backup, return Boolean
-        val index = database.findIndexUserByEmail(email)
-        if (index != null) {
-            val mockUser = database.users[index]
-            if (password == mockUser.password) {
-                return true
-            }
-        }
-        return false*/
     }
 
     private fun validateSignUp(email: String, username: String, password: String) {

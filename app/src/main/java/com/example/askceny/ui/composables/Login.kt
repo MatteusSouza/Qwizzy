@@ -52,6 +52,7 @@ fun SignInScreen(
             onValueChange = {it ->
                 email = it
                 viewModel.updateEmailError()
+                viewModel.updatePasswordError()
             },
             label = { Text("Email") },
             placeholder = { Text("email@example.com") },
@@ -65,7 +66,10 @@ fun SignInScreen(
             value = password,
             onValueChange = {it ->
                 password = it
-                viewModel.updatePasswordError()
+                if (passwordError.isNotEmpty()) {
+                    viewModel.updatePasswordError()
+                    viewModel.updateEmailError()
+                }
             },
             visualTransformation = PasswordVisualTransformation(),
             label = { Text("Password") },

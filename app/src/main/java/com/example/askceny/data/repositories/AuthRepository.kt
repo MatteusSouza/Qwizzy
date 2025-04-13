@@ -8,6 +8,4 @@ interface AuthRepository {
     suspend fun signInWithEmailAndPassword(email: String, password: String) : AuthState
     fun getCurrentUser() : User?
     fun signOut()
-    fun isEmail(email: String) : Boolean
-    fun emailExists(email: String) : Boolean
 }

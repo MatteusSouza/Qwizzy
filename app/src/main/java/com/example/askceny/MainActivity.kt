@@ -139,6 +139,7 @@ fun MainScreen(
                         title = "Quizzes",
                         showSearchButton = true,
                         onClickSearch = { navController.navigate("Search") },
+                        onClickLogout = { authViewModel.signOut() }
                     )
                     println("NAVIGATION_ROUTE: QuizList")
                 }

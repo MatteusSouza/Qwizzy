@@ -39,7 +39,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             }
 
             /* To test if start navigation function is working */
-            signIn("test@test.com","test123") /* for test only */
+//            signIn("test@test.com","test123") /* for test only */
             /* ----------------------------------------------- */
         }
     }
@@ -52,11 +52,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         if (email.isEmpty()) {_emailError.value = "Email can not be empty"}
         if (password.isEmpty()) {_passwordError.value = "Password can not be empty"}
         if(email.isEmpty() || password.isEmpty()) { return }
-
-        if (!authRepository.isEmail(email)) {
-            _emailError.value = "Invalid Email"
-            return
-        }
 
         viewModelScope.launch {
             _authState.value = authRepository.createUserWithEmailAndPassword(email, password)
@@ -72,18 +67,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         if (email.isEmpty()) {_emailError.value = "Email can not be empty"}
         if (password.isEmpty()) {_passwordError.value = "Password can not be empty"}
         if(email.isEmpty() || password.isEmpty()) { return }
-        if (!authRepository.isEmail(email)) {
-            _emailError.value = "Invalid Email"
-            return
-        }
 
         viewModelScope.launch {
             val res = authRepository.signInWithEmailAndPassword(email, password)
             _authState.value = res
             if (res is AuthState.AuthError) {
                 when(res.errorCode) {
-                    ErrorCode.USER_NOT_FOUND -> { _emailError.value = "User not found" }
-                    ErrorCode.WRONG_PASSWORD -> { _passwordError.value = "Wrong password" }
+                    ErrorCode.ERROR_INVALID_CREDENTIAL -> {
+                        _emailError.value = " "
+                        _passwordError.value = " "
+                    }
                     ErrorCode.INVALID_EMAIL -> { _emailError.value = "Invalid email" }
                     ErrorCode.EMAIL_ALREADY_IN_USE -> { _emailError.value = "Email already in use" }
                     ErrorCode.WEAK_PASSWORD -> { _passwordError.value = "Weak password" }

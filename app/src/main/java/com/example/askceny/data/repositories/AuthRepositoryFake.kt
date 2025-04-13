@@ -1,6 +1,5 @@
 package com.example.askceny.data.repositories
 
-import com.example.askceny.data.local.MockServerApi
 import com.example.askceny.data.local.MockedAuthManager
 import com.example.askceny.data.models.User
 import com.example.askceny.data.types.AuthState
@@ -10,10 +9,6 @@ import com.example.askceny.exceptions.AuthException
 class AuthRepositoryFake : AuthRepository {
 
     private val authManager = MockedAuthManager()
-
-    fun getLoggedUser(): User? {
-        return authManager.getUser()
-    }
 
     override suspend fun createUserWithEmailAndPassword(
         email: String,
@@ -51,13 +46,4 @@ class AuthRepositoryFake : AuthRepository {
     override fun signOut() {
         authManager.logoff()
     }
-
-    override fun isEmail(email: String): Boolean {
-        return MockServerApi.isEmail(email)
-    }
-
-    override fun emailExists(email: String): Boolean {
-        return MockServerApi.emailExists(email)
-    }
-
 }

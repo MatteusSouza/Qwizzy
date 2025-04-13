@@ -10,8 +10,8 @@ object RepositoryProvider {
 }
 
 private class AppContainer() {
-//    val authRepository by lazy { AuthRepositoryImpl() }
-//    val authRepository by lazy { QuizRepositoryImpl() }
+    val authRepository by lazy { AuthRepositoryImpl() }
+    val quizRepository by lazy { QuizRepositoryImpl() }
 }
 private class FakeAppContainer() {
     val authRepository by lazy { AuthRepositoryFake() }

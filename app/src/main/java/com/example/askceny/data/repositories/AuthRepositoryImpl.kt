@@ -1,27 +1,46 @@
 package com.example.askceny.data.repositories
 
+import android.util.Log
 import com.example.askceny.data.models.User
 import com.example.askceny.data.types.AuthState
 import com.example.askceny.data.types.ErrorCode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
+import kotlin.random.Random
 
 
 class AuthRepositoryImpl() : AuthRepository {
 
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
-    override suspend fun createUserWithEmailAndPassword(email: String, password: String) : AuthState {
+    override suspend fun createUserWithEmailAndPassword(displayName: String, email: String, password: String) : AuthState {
         return try {
-            auth.createUserWithEmailAndPassword(email, password).await()
-            println("AuthRepositoryImpl: CreateUserWithEmailAndPassword: ${auth.currentUser}")
+            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+            val uid = authResult.user?.uid
+            Log.d("AUTH_CREATE_USER", "uid: $uid")
+            if (uid != null){
+                val newUser = User(uid, displayName, "${displayName}${Random.nextInt(1000,9999)}", "","","")
+
+                Log.d("AUTH_CREATE_USER", "createUserWithEmailAndPassword uid: $uid")
+                val userCollection = db.collection("users")
+                    .document(uid)
+                    .set(newUser)
+                    .await()
+                Log.d("AUTH_CREATE_USER", "createUserWithEmailAndPassword userCollection: $userCollection")
+            }
             AuthState.Authenticated
         } catch (e: FirebaseAuthException) {
-            println("AuthRepositoryImpl: CreateUserWithEmailAndPassword: ${e.errorCode}")
+            Log.e("AUTH_CREATE_USER", "FirebaseAuthException on CreateUserWithEmailAndPassword:\n ${e.errorCode}")
             AuthState.AuthError(mapFirebaseError(e))
+        } catch (e: FirebaseFirestoreException) {
+            Log.e("AUTH_CREATE_USER", "FirebaseAuthException on CreateUserWithEmailAndPassword:\n ${e.message}")
+            AuthState.AuthError(ErrorCode.UNKNOWN_ERROR) // TODO: Implementing a map filter to handle FirebaseFirestoreException
         } catch (e: Exception) {
-            println("AuthRepositoryImpl: CreateUserWithEmailAndPassword: $e")
+            Log.e("AUTH_CREATE_USER", "Unknown Exception on CreateUserWithEmailAndPassword:\n $e")
             AuthState.AuthError(ErrorCode.UNKNOWN_ERROR)
         }
     }

@@ -11,11 +11,12 @@ class AuthRepositoryFake : AuthRepository {
     private val authManager = MockedAuthManager()
 
     override suspend fun createUserWithEmailAndPassword(
+        displayName: String,
         email: String,
         password: String
     ): AuthState {
         try {
-            authManager.signUpWithEmail(email = email, displayName = "", username = "", password = password)
+            authManager.signUpWithEmail(email = email, displayName = displayName, username = "", password = password)
             return AuthState.Authenticated
         } catch (e: AuthException) {
             return AuthState.AuthError(e.authException)

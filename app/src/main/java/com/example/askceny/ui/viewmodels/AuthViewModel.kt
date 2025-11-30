@@ -44,17 +44,19 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun signUp(email: String, password: String) {
+    fun signUp(displayName: String, email: String, password: String) {
         _authState.value = AuthState.Loading
 
+        val displayName = displayName.trim()
         val email = email.trim()
         val password = password.trim()
+        if (displayName.isEmpty()) {_displayNameError.value = "Name can not be empty"}
         if (email.isEmpty()) {_emailError.value = "Email can not be empty"}
         if (password.isEmpty()) {_passwordError.value = "Password can not be empty"}
         if(email.isEmpty() || password.isEmpty()) { return }
 
         viewModelScope.launch {
-            _authState.value = authRepository.createUserWithEmailAndPassword(email, password)
+            _authState.value = authRepository.createUserWithEmailAndPassword(displayName, email, password)
         }
     }
 

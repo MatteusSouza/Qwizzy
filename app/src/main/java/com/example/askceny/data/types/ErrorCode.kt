@@ -13,3 +13,10 @@ enum class ErrorCode {
 //    USER_NOT_FOUND,
 //    WRONG_PASSWORD,
 }
+
+/** TODO: Implement FirebaseFirestore ErrorCode
+ * UNAVAILABLE
+ * NOT_FOUND
+ * ALREADY_EXISTS
+ * CANCELLED
+ * */

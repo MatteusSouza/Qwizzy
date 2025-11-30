@@ -96,10 +96,10 @@ fun SignUpScreen(
             }
         )
         Button(
-            onClick = { viewModel.signUp(email,password) },
+            onClick = { viewModel.signUp(displayName, email, password) },
             //this enabled verification was not tested
-//            enabled = invalidDisplayName.isEmpty() && invalidEmail.isEmpty() && invalidPassword.isEmpty() && !displayName.isEmpty() && !email.isEmpty() && !password.isEmpty(),
-            enabled = invalidDisplayName.isEmpty() && invalidEmail.isEmpty()
+            enabled = invalidDisplayName.isEmpty() && invalidEmail.isEmpty() && invalidPassword.isEmpty() && /*!displayName.isEmpty() && */ displayName.length >= 3 && email.isNotEmpty() && password.isNotEmpty(),
+//            enabled = invalidDisplayName.isEmpty() && invalidEmail.isEmpty()
         ) {
             Text("Next")
         }

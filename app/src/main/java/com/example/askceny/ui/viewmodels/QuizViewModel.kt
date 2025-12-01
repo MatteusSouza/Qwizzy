@@ -1,5 +1,6 @@
 package com.example.askceny.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,57 +15,66 @@ import kotlinx.coroutines.launch
 
 class QuizViewModel(private val quizRepository: QuizRepository) : ViewModel() {
     private val _quizzesState : MutableStateFlow<MutableList<Quiz>> = MutableStateFlow(mutableListOf())
-    private var quizInFocus : Quiz? = null
+    private val _quizInFocus = MutableStateFlow<Quiz?>(null)
 
     val quizzesState : StateFlow<List<Quiz>> = _quizzesState
+    val quizInFocus: StateFlow<Quiz?> = _quizInFocus
 
     init {
         viewModelScope.launch {
-            update()
-            println("QUIZ_VIEW_MODEL: QUIZZES_SIZE ${quizzesState.value.size}")
+            Log.d("QUIZ_VIEW_MODEL", "QuizViewModel Start")
         }
     }
 
     fun saveQuiz(title: String, description: String) {
+        println("QUIZ_VIEW_MODEL: SAVE_QUIZ: editQuiz called")
         viewModelScope.launch {
-            val quiz = getQuizInFocus()
+            val currentQuiz = getQuizInFocus()
             println("QuizzesViewModel.saveQuiz: onFocus ${getQuizInFocus()}")
-            if (quiz == null){
+            if (currentQuiz == null){
                     quizRepository.createQuiz(title = title, description = description)
                     println("QUIZ_VIEW_MODEL: SAVE_QUIZ: createQuiz called")
             }
             else {
-                quizRepository.editQuiz(
-                    id = quiz.id,
-                    title = title,
-                    description = description,
-                    img = quiz.img,
-                    isPublic = quiz.isPublic
-                )
-                println("QUIZ_VIEW_MODEL: SAVE_QUIZ: editQuiz called")
+                val quizUpdateMap = mutableMapOf<String, Any>()
+                val quizUpdateState = quizInFocus.value
 
+                if (title != currentQuiz.title) {
+                    quizUpdateMap["title"] = title
+                    quizUpdateState?.title = title
+                }
+                if (description != currentQuiz.description) {
+                    quizUpdateMap["description"] = description
+                    quizUpdateState?.description = description
+                }
+                if (quizUpdateMap.isNotEmpty()) {
+                    quizRepository.editQuiz(currentQuiz.id, quizUpdateMap)
+                    _quizInFocus.value = quizUpdateState
+                }
             }
-            _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
+                _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
         }
     }
 
-    fun getAllQuizzes(): List<Quiz> {
+    suspend fun getAllQuizzes(): List<Quiz> {
         return quizRepository.getAllQuizzes()
     }
 
     fun getQuizInFocus() : Quiz? {
-        println("QUIZ_DETAIL: QUIZ_VIEW_MODEL: Is QuizInFocus Null: ${quizInFocus == null}")
-        return quizInFocus
+        println("QUIZ_DETAIL: QUIZ_VIEW_MODEL: Is QuizInFocus Null: ${quizInFocus.value == null}")
+        return quizInFocus.value
     }
 
     fun setQuizInFocus(quiz: Quiz?) {
-        quizInFocus = quiz
-        println("QUIZ_DETAIL: QUIZ_VIEW_MODEL: Is quizInFocus null: ${quizInFocus == null}")
+        _quizInFocus.value = quiz
+        println("QUIZ_DETAIL: QUIZ_VIEW_MODEL: Is quizInFocus null: ${quizInFocus.value == null}")
     }
 
     fun update() {
-        println("QuizViewModel: Update called")
-        _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
+        viewModelScope.launch {
+            println("QuizViewModel: Update called")
+            _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
+        }
     }
 
     companion object {

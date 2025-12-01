@@ -26,11 +26,11 @@ class AuthRepositoryImpl() : AuthRepository {
                 val newUser = User(uid, displayName, "${displayName}${Random.nextInt(1000,9999)}", "","","")
 
                 Log.d("AUTH_CREATE_USER", "createUserWithEmailAndPassword uid: $uid")
-                val userCollection = db.collection("users")
+                db.collection("users")
                     .document(uid)
                     .set(newUser)
                     .await()
-                Log.d("AUTH_CREATE_USER", "createUserWithEmailAndPassword userCollection: $userCollection")
+                Log.d("AUTH_CREATE_USER", "createUserWithEmailAndPassword Success to createUser ${newUser.id}")
             }
             AuthState.Authenticated
         } catch (e: FirebaseAuthException) {

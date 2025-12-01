@@ -1,6 +1,8 @@
 package com.example.askceny.data.repositories
 
+import android.util.Log
 import com.example.askceny.data.local.MockServerApi
+import com.example.askceny.data.local.MockedAuthManager
 import com.example.askceny.data.models.Question
 import com.example.askceny.data.models.Quiz
 import com.example.askceny.data.types.QuestionType
@@ -8,10 +10,12 @@ import com.example.askceny.exceptions.AuthException
 
 class QuizRepositoryFake () : QuizRepository {
 
-    override fun createQuiz(title: String, description: String, img: String,isPublic: Boolean) {
+    private val authManager = MockedAuthManager
+
+    override suspend fun createQuiz(title: String, description: String, img: String, isPublic: Boolean) {
         MockServerApi.createQuiz(title, description = description, img = img, isPublic = isPublic)
     }
-    override fun getAllQuizzes(): List<Quiz> {
+    override suspend fun getAllQuizzes(): List<Quiz> {
         try {
             val quizzes = MockServerApi.getAllQuizzes()
             println("QUIZ_REPOSITORY_FAKE: getAllQuizzes.. $quizzes")
@@ -22,15 +26,12 @@ class QuizRepositoryFake () : QuizRepository {
             return listOf<Quiz>()
         }
     }
-    override fun editQuiz(
-        id: String,
-        title: String,
-        description: String,
-        img: String,
-        isPublic: Boolean
-    ) {
-        println("QuizRepository.editQuiz: id $id title $title description $description")
-        MockServerApi.editQuiz(id = id, title = title,description = description,img = img, isPublic = isPublic)
+    override suspend fun editQuiz(quizId: String, quizUpdateMap: Map<String, Any>) {
+        try {
+            MockServerApi.editQuiz(quizId, quizUpdateMap)
+        } catch (e: Exception) {
+            Log.e("QUIZ_REPOSITORY_EDIT", "Unknown Exception: \n$e")
+        }
     }
     override fun deleteQuiz(quizId: String) {
         MockServerApi.deleteQuiz(quizId)

@@ -96,17 +96,10 @@ class MockServer(val database: MockDatabase) {
         return null
     }
 
-    fun editQuiz(
-        token: String,
-        id: String,
-        title: String,
-        description: String,
-        img: String,
-        isPublic: Boolean
-    ) {
+    fun editQuiz(token: String, quizId: String, quizUpdateMap: Map<String, Any>) {
         val user = getUser(token)
         if (isActiveToken(token))
-            database.editQuiz(id = id, title = title,description = description,img = img, isPublic = isPublic)
+            database.editQuiz(quizId, quizUpdateMap)
     }
 
     fun deleteQuiz(token: String, quizId: String) {

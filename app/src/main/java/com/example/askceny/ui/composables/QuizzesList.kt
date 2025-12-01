@@ -19,6 +19,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -42,7 +43,11 @@ fun QuizzesList(
     onClickItem: () -> Unit,
     onClickAddQuiz: () -> Unit
 ) {
-    viewModel.update()
+//    viewModel.update() //So many request. Remember to never do that. Uses LaunchedEffect
+    LaunchedEffect(Unit) {
+        viewModel.update()
+    }
+
     val quizzesState by viewModel.quizzesState.collectAsState()
 
     Box(modifier = modifier

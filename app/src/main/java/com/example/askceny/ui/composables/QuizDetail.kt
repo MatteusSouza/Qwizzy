@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -25,7 +27,10 @@ fun QuizDetail(
     modifier: Modifier,
     viewModel: QuizViewModel
 ) {
-    val quiz : Quiz = viewModel.getQuizInFocus() ?: Quiz("", "", "")
+
+    val quizInFocus by viewModel.quizInFocus.collectAsState()
+
+    val quiz : Quiz = quizInFocus ?: Quiz("", "", "")
     val scrollState = rememberScrollState()
 
     Column(modifier = modifier.padding(16.dp).verticalScroll(scrollState)) {

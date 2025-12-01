@@ -55,15 +55,9 @@ abstract class MockServerApi {
             val token = tokenIfLoggedIn()
             return server.getAllQuizzes(token)
         }
-        fun editQuiz(
-            id: String,
-            title: String,
-            description: String,
-            img: String,
-            isPublic: Boolean
-        ) {
+        fun editQuiz(quizId: String, quizUpdateMap: Map<String, Any>) {
             val token = tokenIfLoggedIn()
-            server.editQuiz(token = token, id = id, title = title, description = description,img = img, isPublic = isPublic)
+            server.editQuiz(token, quizId, quizUpdateMap)
         }
         fun deleteQuiz(quizId: String) {
             val token = tokenIfLoggedIn()

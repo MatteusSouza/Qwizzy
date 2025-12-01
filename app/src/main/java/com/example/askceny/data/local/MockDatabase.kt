@@ -54,13 +54,7 @@ class MockDatabase {
         println("MOCK_DATA_BASE: getAllQuizzes.. $relationUserQuiz[userId]")
         return relationUserQuiz[userId]
     }
-    fun editQuiz(
-        id: String,
-        title: String,
-        description: String,
-        img: String,
-        isPublic: Boolean
-    ) : Boolean {
+    fun editQuiz(id: String, quizMap: Map<String, Any>) : Boolean {
         if (id.isEmpty()) {
             println("MOCK_DATA_BASE: EDIT_QUIZ: id can not be empty.")
             return false
@@ -73,10 +67,15 @@ class MockDatabase {
 
         val quiz = quizzes[index]
         println("MOCK_DATA_BASE: EDIT_QUIZ: Quiz title; ${quiz.title}")
-        quiz.title = title
-        quiz.description = description
-        quiz.img = img
-        quiz.isPublic = isPublic
+
+        quizMap.forEach { (key, value) ->
+            when (key) {
+                "title" -> quiz.title = value as String
+                "description" -> quiz.description = value as String
+                "img" -> quiz.img = value as String
+                "isPublic" -> quiz.isPublic = value as Boolean
+            }
+        }
         return true
     }
     fun deleteQuiz(userId: String, quizId: String) {

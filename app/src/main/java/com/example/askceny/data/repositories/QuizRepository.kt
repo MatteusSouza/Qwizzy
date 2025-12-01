@@ -6,9 +6,9 @@ import com.example.askceny.data.types.QuestionType
 
 interface QuizRepository {
 
-    fun createQuiz(title: String, description: String = "", img: String = "",isPublic: Boolean = false)
-    fun getAllQuizzes(): List<Quiz>
-    fun editQuiz(id: String, title: String, description: String, img: String, isPublic: Boolean)
+    suspend fun createQuiz(title: String, description: String = "", img: String = "", isPublic: Boolean = false)
+    suspend fun getAllQuizzes(): List<Quiz>
+    suspend fun editQuiz(quizId: String, quizUpdateMap: Map<String, Any>)
     fun deleteQuiz(quizId: String)
     fun createQuestion(quizId: String, text: String, type: QuestionType)
     fun getQuizAllQuestions(quizId: String) : MutableList<Question>?

@@ -1,4 +1,4 @@
-package com.example.askceny.ui.composables
+package com.example.askceny.presentation.composables
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
-import com.example.askceny.data.models.Quiz
-import com.example.askceny.ui.viewmodels.QuizViewModel
+import com.example.askceny.domain.models.Quiz
+import com.example.askceny.presentation.viewmodels.QuizViewModel
 
 @Composable
 fun QuizDetail(

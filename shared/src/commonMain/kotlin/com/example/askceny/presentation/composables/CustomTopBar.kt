@@ -1,4 +1,4 @@
-package com.example.askceny.ui.composables
+package com.example.askceny.presentation.composables
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues

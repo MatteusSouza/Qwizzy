@@ -1,4 +1,4 @@
-package com.example.askceny.ui.viewmodels
+package com.example.askceny.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.askceny.data.repositories.AuthRepository
-import com.example.askceny.data.types.AuthState
-import com.example.askceny.data.types.ErrorCode
+import com.example.askceny.domain.repositories.AuthRepository
+import com.example.askceny.domain.types.AuthState
+import com.example.askceny.domain.types.ErrorCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

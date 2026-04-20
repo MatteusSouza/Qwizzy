@@ -1,4 +1,4 @@
-package com.example.askceny.ui.theme
+package com.example.askceny.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

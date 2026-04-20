@@ -1,14 +1,13 @@
-package com.example.askceny.ui.viewmodels
+package com.example.askceny.presentation.viewmodels
 
-import android.util.Log
+import com.example.askceny.domain.models.Quiz
+import com.example.askceny.domain.repositories.QuizRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.askceny.data.models.Quiz
-import com.example.askceny.data.repositories.QuizRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,7 +21,7 @@ class QuizViewModel(private val quizRepository: QuizRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            Log.d("QUIZ_VIEW_MODEL", "QuizViewModel Start")
+            println("QUIZ_VIEW_MODEL: QuizViewModel Start")
         }
     }
 

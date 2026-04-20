@@ -1,4 +1,4 @@
-package com.example.askceny.ui.composables
+package com.example.askceny.presentation.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,9 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.askceny.data.repositories.AuthRepositoryFake
-import com.example.askceny.data.types.AuthState
-import com.example.askceny.ui.viewmodels.AuthViewModel
+import com.example.askceny.domain.types.AuthState
+import com.example.askceny.presentation.viewmodels.AuthViewModel
 
 
 @Composable

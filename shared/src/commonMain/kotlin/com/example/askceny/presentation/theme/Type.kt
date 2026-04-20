@@ -1,4 +1,4 @@
-package com.example.askceny.ui.theme
+package com.example.askceny.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

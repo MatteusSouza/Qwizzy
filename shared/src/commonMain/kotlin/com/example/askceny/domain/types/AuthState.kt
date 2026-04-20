@@ -1,4 +1,4 @@
-package com.example.askceny.data.types
+package com.example.askceny.domain.types
 
 sealed class AuthState {
     object Loading: AuthState()

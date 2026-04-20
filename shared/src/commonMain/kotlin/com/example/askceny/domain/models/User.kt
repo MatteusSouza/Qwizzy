@@ -1,6 +1,4 @@
-package com.example.askceny.data.models
-
-import java.util.UUID
+package com.example.askceny.domain.models
 
 data class User(
     val id: String,

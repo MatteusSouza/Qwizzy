@@ -1,4 +1,4 @@
-package com.example.askceny.data.models
+package com.example.askceny.domain.models
 
 data class Answer(
     var text: String,

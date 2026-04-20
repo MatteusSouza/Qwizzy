@@ -1,7 +1,7 @@
-package com.example.askceny.data.repositories
+package com.example.askceny.domain.repositories
 
-import com.example.askceny.data.models.User
-import com.example.askceny.data.types.AuthState
+import com.example.askceny.domain.models.User
+import com.example.askceny.domain.types.AuthState
 
 interface AuthRepository {
     suspend fun createUserWithEmailAndPassword(displayName: String, email: String, password: String) : AuthState

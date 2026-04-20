@@ -1,9 +1,7 @@
-package com.example.askceny.data.models
-
-import com.google.firebase.firestore.DocumentId
+package com.example.askceny.domain.models
 
 data class Quiz(
-    @DocumentId val id: String = "",
+    val id: String = "",
     var title: String = "",
     var description: String = "",
     var img: String = "",

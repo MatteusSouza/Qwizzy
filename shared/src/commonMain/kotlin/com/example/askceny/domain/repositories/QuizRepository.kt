@@ -1,8 +1,8 @@
-package com.example.askceny.data.repositories
+package com.example.askceny.domain.repositories
 
-import com.example.askceny.data.models.Question
-import com.example.askceny.data.models.Quiz
-import com.example.askceny.data.types.QuestionType
+import com.example.askceny.domain.models.Question
+import com.example.askceny.domain.models.Quiz
+import com.example.askceny.domain.types.QuestionType
 
 interface QuizRepository {
 

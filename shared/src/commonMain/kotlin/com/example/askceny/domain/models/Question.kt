@@ -1,6 +1,6 @@
-package com.example.askceny.data.models
+package com.example.askceny.domain.models
 
-import com.example.askceny.data.types.QuestionType
+import com.example.askceny.domain.types.QuestionType
 
 data class Question(
     val id: String,

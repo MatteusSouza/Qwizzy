@@ -1,4 +1,4 @@
-package com.example.askceny.data.types
+package com.example.askceny.domain.types
 
 enum class QuestionType {
     TRUE_FALSE,

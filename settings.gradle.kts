@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Ask Ceny"
 include(":app")
- 
+include(":shared")

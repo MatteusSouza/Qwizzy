@@ -1,17 +1,42 @@
+# IntelliJ / Android Studio
 *.iml
+.idea
+
+# Gradle / Kotlin
 .gradle
+.kotlin
+
+# Local config
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/deploymentTargetSelector.xml
-.DS_Store
+local.properties
+
+# Build outputs
 /build
-/captures
+**/build/
+!src/**/build/
+
+# Native / C++
 .externalNativeBuild
 .cxx
-local.properties
+
+# Captures
+/captures
+captures
+
+# macOS
+.DS_Store
+
+# Google Services
 google-services.json
+
+# Xcode / iOS
+xcuserdata
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# Node
+node_modules/

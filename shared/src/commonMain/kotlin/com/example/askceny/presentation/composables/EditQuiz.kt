@@ -75,5 +75,5 @@ fun EditQuiz(modifier: Modifier, viewModel: QuizViewModel, onBackButton: () -> U
 @Preview(showBackground = true)
 @Composable
 fun EditQuizPreview() {
-    EditQuiz(modifier = Modifier, viewModel = QuizViewModel(QuizRepositoryFake()), onBackButton = {})
+//    EditQuiz(modifier = Modifier, viewModel = QuizViewModel(QuizRepositoryFake()), onBackButton = {})
 }

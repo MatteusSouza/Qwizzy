@@ -112,9 +112,9 @@ fun SignInScreen(
 @Preview(showBackground = true)
 @Composable
 fun SignInPreview() {
-    SignInScreen(modifier = Modifier,
-        viewModel = AuthViewModel(AuthRepositoryFake()),
-        { },
-        { }
-    )
+//    SignInScreen(modifier = Modifier,
+//        viewModel = AuthViewModel(AuthRepositoryFake()),
+//        { },
+//        { }
+//    )
 }

@@ -125,5 +125,5 @@ fun SignUpScreen(
 @Preview(showBackground = true)
 @Composable
 fun SignUpPreview() {
-    SignUpScreen(modifier = Modifier, AuthViewModel(AuthRepositoryFake()), { }, { })
+//    SignUpScreen(modifier = Modifier, AuthViewModel(AuthRepositoryFake()), { }, { })
 }

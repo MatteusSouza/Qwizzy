@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FloatingActionButton
@@ -137,10 +136,10 @@ fun QuizRow(viewModel: QuizViewModel, quizItem: Quiz, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun QuizzesListPreview() {
-    QuizzesList(
-        viewModel = QuizViewModel(QuizRepositoryFake()),
-        modifier = Modifier,
-        onClickItem = {},
-        onClickAddQuiz = {}
-    )
+//    QuizzesList(
+//        viewModel = QuizViewModel(QuizRepositoryFake()),
+//        modifier = Modifier,
+//        onClickItem = {},
+//        onClickAddQuiz = {}
+//    )
 }

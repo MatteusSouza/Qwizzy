@@ -1,8 +1,25 @@
 package com.example.askceny.data.local
 
-import androidx.room.RoomDatabase
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.room.Room
+import kotlinx.cinterop.ExperimentalForeignApi
+import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSUserDomainMask
 
-actual fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
-    return RoomDatabase.builder<AppDatabase>(BundledSQLiteDriver())
+@OptIn(ExperimentalForeignApi::class)
+actual fun getDatabaseBuilder() = Room.databaseBuilder<AppDatabase>(
+    name = "${documentDirectory()}/$DATABASE_NAME",
+)
+
+@OptIn(ExperimentalForeignApi::class)
+private fun documentDirectory(): String {
+    return checkNotNull(
+        NSFileManager.defaultManager.URLForDirectory(
+            directory = NSDocumentDirectory,
+            inDomain = NSUserDomainMask,
+            appropriateForURL = null,
+            create = false,
+            error = null,
+        )?.path
+    )
 }

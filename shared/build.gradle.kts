@@ -25,6 +25,7 @@ kotlin {
             implementation(libs.androidx.room.runtime)
             implementation(libs.sqlite.bundled)
             implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.koin.core)
 
             implementation(compose.runtime)
             implementation(compose.foundation)

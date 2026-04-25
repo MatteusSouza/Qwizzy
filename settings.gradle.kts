@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Ask Ceny"
+rootProject.name = "AskCeny"
 include(":app")
 include(":shared")

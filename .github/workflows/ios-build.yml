@@ -1,0 +1,53 @@
+name: iOS Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build-ios:
+    name: Build unsigned iOS artifact
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec iosApp/project.yml --project iosApp/iosApp.xcodeproj
+
+      - name: Build unsigned simulator app
+        run: |
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build/ios-derived-data \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned simulator ipa
+        run: |
+          mkdir -p build/ios-artifacts/Payload
+          cp -R build/ios-derived-data/Build/Products/Debug-iphonesimulator/iosApp.app build/ios-artifacts/Payload/
+          (cd build/ios-artifacts && zip -r AskCeny-unsigned-simulator.ipa Payload)
+
+      - name: Upload unsigned iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AskCeny-unsigned-simulator-ipa
+          path: build/ios-artifacts/AskCeny-unsigned-simulator.ipa

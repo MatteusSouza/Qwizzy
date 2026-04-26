@@ -33,7 +33,8 @@ jobs:
             -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -configuration Debug \
-            -sdk iphonesimulator \
+            -destination "generic/platform=iOS" \
+            -sdk iphoneos \
             -derivedDataPath build/ios-derived-data \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
@@ -43,7 +44,7 @@ jobs:
       - name: Package unsigned simulator ipa
         run: |
           mkdir -p build/ios-artifacts/Payload
-          cp -R build/ios-derived-data/Build/Products/Debug-iphonesimulator/iosApp.app build/ios-artifacts/Payload/
+          cp -R build/ios-derived-data/Build/Products/Debug-iphoneos/iosApp.app build/ios-artifacts/Payload/
           (cd build/ios-artifacts && zip -r AskCeny-unsigned-simulator.ipa Payload)
 
       - name: Upload unsigned iOS artifact

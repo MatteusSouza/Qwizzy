@@ -21,13 +21,24 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Kotlin Native dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: kotlin-native-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties', 'settings.gradle.kts', 'build.gradle.kts', 'composeApp/build.gradle.kts', 'shared/build.gradle.kts', 'iosApp/project.yml') }}
+          restore-keys: |
+            kotlin-native-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
       - name: Generate Xcode project
         run: xcodegen generate --spec iosApp/project.yml
 
-      - name: Build unsigned simulator app
+      - name: Build unsigned device app
         run: |
           xcodebuild \
             -project iosApp/iosApp.xcodeproj \
@@ -41,14 +52,14 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             build
 
-      - name: Package unsigned simulator ipa
+      - name: Package unsigned device ipa
         run: |
           mkdir -p build/ios-artifacts/Payload
           cp -R build/ios-derived-data/Build/Products/Debug-iphoneos/iosApp.app build/ios-artifacts/Payload/
-          (cd build/ios-artifacts && zip -r AskCeny-unsigned-simulator.ipa Payload)
+          (cd build/ios-artifacts && zip -r AskCeny-unsigned-device.ipa Payload)
 
       - name: Upload unsigned iOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AskCeny-unsigned-simulator-ipa
-          path: build/ios-artifacts/AskCeny-unsigned-simulator.ipa
+          name: AskCeny-unsigned-device-ipa
+          path: build/ios-artifacts/AskCeny-unsigned-device.ipa

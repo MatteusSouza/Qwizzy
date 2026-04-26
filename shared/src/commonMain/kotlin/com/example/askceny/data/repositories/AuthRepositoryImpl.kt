@@ -14,10 +14,11 @@ class AuthRepositoryImpl : AuthRepository {
     }
 
     override fun getCurrentUser(): User? {
+        return User("", "", "", "", "", "")
         TODO("Not yet implemented")
     }
 
     override fun signOut() {
-        TODO("Not yet implemented")
+//        TODO("Not yet implemented")
     }
 }

@@ -26,13 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import com.example.askceny.domain.models.Quiz
 import com.example.askceny.presentation.viewmodels.QuizViewModel
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun QuizzesList(

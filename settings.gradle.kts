@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AskCeny"
-include(":app")
+include(":composeApp")
 include(":shared")

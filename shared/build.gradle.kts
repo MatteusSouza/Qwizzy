@@ -40,6 +40,9 @@ kotlin {
 
 tasks.matching {
     it.name in listOf(
+        "kspKotlinIosX64",
+        "kspKotlinIosArm64",
+        "kspKotlinIosSimulatorArm64",
         "compileKotlinIosX64",
         "compileKotlinIosArm64",
         "compileKotlinIosSimulatorArm64",

@@ -40,3 +40,7 @@ xcuserdata
 
 # Node
 node_modules/
+
+#Ai Context
+.agents
+.codex

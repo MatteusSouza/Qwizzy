@@ -1,5 +1,8 @@
 package com.example.askceny
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,7 +18,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -40,7 +47,13 @@ fun App(
     quizViewModel: QuizViewModel,
 ) {
     AskCenyTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        val focusManager = LocalFocusManager.current
+
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .clearFocusOnTap(focusManager),
+        ) { innerPadding ->
             MainScreen(
                 innerPadding = innerPadding,
                 authViewModel = authViewModel,
@@ -49,6 +62,16 @@ fun App(
         }
     }
 }
+
+private fun Modifier.clearFocusOnTap(focusManager: FocusManager): Modifier =
+    pointerInput(focusManager) {
+        awaitEachGesture {
+            awaitFirstDown(pass = PointerEventPass.Initial)
+            if (waitForUpOrCancellation(pass = PointerEventPass.Initial) != null) {
+                focusManager.clearFocus()
+            }
+        }
+    }
 
 @Composable
 fun MainScreen(

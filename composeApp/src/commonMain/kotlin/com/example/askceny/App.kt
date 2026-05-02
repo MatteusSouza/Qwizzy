@@ -5,11 +5,16 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,17 +54,11 @@ fun App(
     AskCenyTheme {
         val focusManager = LocalFocusManager.current
 
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .clearFocusOnTap(focusManager),
-        ) { innerPadding ->
-            MainScreen(
-                innerPadding = innerPadding,
-                authViewModel = authViewModel,
-                quizViewmodel = quizViewModel,
-            )
-        }
+        MainScreen(
+            modifier = Modifier.clearFocusOnTap(focusManager),
+            authViewModel = authViewModel,
+            quizViewmodel = quizViewModel,
+        )
     }
 }
 
@@ -75,7 +74,7 @@ private fun Modifier.clearFocusOnTap(focusManager: FocusManager): Modifier =
 
 @Composable
 fun MainScreen(
-    innerPadding: PaddingValues,
+    modifier: Modifier = Modifier,
     authViewModel: AuthViewModel,
     quizViewmodel: QuizViewModel,
 ) {
@@ -93,66 +92,22 @@ fun MainScreen(
         isAppOnStart = false
     }
 
-    Column(modifier = Modifier.padding(innerPadding)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            when (currentRoute) {
-                "SignIp" -> {
-                    println("NAVIGATION_ROUTE: Sign In ")
-                }
-
-                "SignUp" -> {
-                    println("NAVIGATION_ROUTE: Sign Up ")
-                }
-
-                "QuizzesList" -> {
-                    CustomTopBar(
-                        modifier = Modifier,
-                        title = "Quizzes",
-                        showSearchButton = true,
-                        onClickSearch = { navController.navigate("Search") },
-                        onClickLogout = { authViewModel.signOut() },
-                    )
-                    println("NAVIGATION_ROUTE: QuizList")
-                }
-
-                "QuizDetail" -> {
-                    CustomTopBar(
-                        modifier = Modifier,
-                        showBackButton = true,
-                        showEditButton = true,
-                        onClickBackPressed = { navController.popBackStack() },
-                        onClickEdit = { navController.navigate("EditQuiz") },
-                    )
-                    println("NAVIGATION_ROUTE: QuizDetail")
-                }
-
-                "EditQuiz" -> {
-                    CustomTopBar(
-                        modifier = Modifier,
-                        showBackButton = true,
-                        onClickBackPressed = { navController.popBackStack() },
-                        onClickSearch = { navController.navigate("Search") },
-                    )
-                    println("NAVIGATION_ROUTE: QuizEdit")
-                }
-
-                "Search" -> {
-                    CustomTopBar(
-                        modifier = Modifier,
-                        showBackButton = true,
-                        onClickBackPressed = { navController.popBackStack() },
-                    )
-                    println("NAVIGATION_ROUTE: QuizEdit")
-                }
-
-                else -> Unit
-            }
-        }
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets.safeDrawing,
+        topBar = {
+            MainTopBar(
+                currentRoute = currentRoute,
+                navController = navController,
+                authViewModel = authViewModel,
+            )
+        },
+    ) { innerPadding ->
         MyNavHost(
-            innerPadding = innerPadding,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding),
             navController = navController,
             startDestination = startDestination,
             authViewModel = authViewModel,
@@ -162,17 +117,92 @@ fun MainScreen(
 }
 
 @Composable
+private fun MainTopBar(
+    currentRoute: String,
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(
+                WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                )
+            ),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        when (currentRoute) {
+            "SignIp" -> {
+                println("NAVIGATION_ROUTE: Sign In ")
+            }
+
+            "SignUp" -> {
+                println("NAVIGATION_ROUTE: Sign Up ")
+            }
+
+            "QuizzesList" -> {
+                CustomTopBar(
+                    modifier = Modifier,
+                    title = "Quizzes",
+                    showSearchButton = true,
+                    onClickSearch = { navController.navigate("Search") },
+                    onClickLogout = { authViewModel.signOut() },
+                )
+                println("NAVIGATION_ROUTE: QuizList")
+            }
+
+            "QuizDetail" -> {
+                CustomTopBar(
+                    modifier = Modifier,
+                    showBackButton = true,
+                    showEditButton = true,
+                    onClickBackPressed = { navController.popBackStack() },
+                    onClickEdit = { navController.navigate("EditQuiz") },
+                )
+                println("NAVIGATION_ROUTE: QuizDetail")
+            }
+
+            "EditQuiz" -> {
+                CustomTopBar(
+                    modifier = Modifier,
+                    showBackButton = true,
+                    onClickBackPressed = { navController.popBackStack() },
+                    onClickSearch = { navController.navigate("Search") },
+                )
+                println("NAVIGATION_ROUTE: QuizEdit")
+            }
+
+            "Search" -> {
+                CustomTopBar(
+                    modifier = Modifier,
+                    showBackButton = true,
+                    onClickBackPressed = { navController.popBackStack() },
+                )
+                println("NAVIGATION_ROUTE: QuizEdit")
+            }
+
+            else -> Unit
+        }
+    }
+}
+
+@Composable
 fun MyNavHost(
-    innerPadding: PaddingValues,
+    modifier: Modifier,
     navController: NavHostController,
     startDestination: String,
     authViewModel: AuthViewModel,
     quizViewmodel: QuizViewModel,
 ) {
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = modifier,
+    ) {
         composable("SignIn") {
             SignInScreen(
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier,
                 viewModel = authViewModel,
                 signInOnClick = {
                     navController.navigate("QuizzesList") {
@@ -184,7 +214,7 @@ fun MyNavHost(
         }
         composable("SignUp") {
             SignUpScreen(
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier,
                 viewModel = authViewModel,
                 signUpOnClick = {
                     navController.navigate("QuizzesList") {

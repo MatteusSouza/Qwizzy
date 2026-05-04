@@ -32,9 +32,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.askceny.domain.types.AuthState
 import com.example.askceny.presentation.composables.CustomTopBar
-import com.example.askceny.presentation.composables.EditQuiz
-import com.example.askceny.presentation.composables.QuizDetail
-import com.example.askceny.presentation.composables.QuizzesList
+import com.example.askceny.presentation.composables.EditQuizScreen
+import com.example.askceny.presentation.composables.QuizDetailScreen
+import com.example.askceny.presentation.composables.QuizzesListScreen
 import com.example.askceny.presentation.composables.SignInScreen
 import com.example.askceny.presentation.composables.SignUpScreen
 import com.example.askceny.presentation.theme.AskCenyTheme
@@ -197,7 +197,7 @@ fun MyNavHost(
             )
         }
         composable("QuizzesList") {
-            QuizzesList(
+            QuizzesListScreen(
                 viewModel = quizViewmodel,
                 modifier = Modifier,
                 onClickItem = { navController.navigate("QuizDetail") },
@@ -205,10 +205,10 @@ fun MyNavHost(
             )
         }
         composable("QuizDetail") {
-            QuizDetail(modifier = Modifier, viewModel = quizViewmodel)
+            QuizDetailScreen(modifier = Modifier, viewModel = quizViewmodel)
         }
         composable("EditQuiz") {
-            EditQuiz(
+            EditQuizScreen(
                 modifier = Modifier,
                 viewModel = quizViewmodel,
                 onBackButton = { navController.popBackStack() },

@@ -15,9 +15,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,15 +40,14 @@ fun CustomTopBar(
     showMenuButton: Boolean = false,
     onSearchMode: Boolean = false
     ) {
-    val onSearchMode by rememberSaveable { mutableStateOf(onSearchMode) }
-
-    var isLandscape = isLandscape()
-    var innerPadding = PaddingValues(6.dp)
-    if (isLandscape) {
-        innerPadding = PaddingValues(top = 2.dp, bottom = 2.dp, start = 6.dp, end = 6.dp)
+    val isLandscape = isLandscape()
+    val innerPadding = if (isLandscape) {
+        PaddingValues(top = 2.dp, bottom = 2.dp, start = 6.dp, end = 6.dp)
+    } else {
+        PaddingValues(6.dp)
     }
 
-    if (onSearchMode == true) {
+    if (onSearchMode) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             IconButton(modifier = Modifier.padding(innerPadding),onClick = onClickBackPressed) {
                 Icon(

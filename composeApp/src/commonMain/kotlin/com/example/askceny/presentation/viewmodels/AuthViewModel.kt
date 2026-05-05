@@ -56,7 +56,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         if(email.isEmpty() || password.isEmpty()) { return }
 
         viewModelScope.launch {
-            _authState.value = authRepository.createUserWithEmailAndPassword(displayName, email, password)
+            val res = authRepository.createUserWithEmailAndPassword(displayName, email, password)
+            _authState.value = res
+            applyAuthError(res)
         }
     }
 
@@ -73,18 +75,24 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             val res = authRepository.signInWithEmailAndPassword(email, password)
             _authState.value = res
-            if (res is AuthState.AuthError) {
-                when(res.errorCode) {
-                    ErrorCode.ERROR_INVALID_CREDENTIAL -> {
-                        _emailError.value = " "
-                        _passwordError.value = " "
-                    }
-                    ErrorCode.INVALID_EMAIL -> { _emailError.value = "Invalid email" }
-                    ErrorCode.EMAIL_ALREADY_IN_USE -> { _emailError.value = "Email already in use" }
-                    ErrorCode.WEAK_PASSWORD -> { _passwordError.value = "Weak password" }
-                    else -> { Unit }
-                }
+            applyAuthError(res)
+        }
+    }
+
+    private fun applyAuthError(authState: AuthState) {
+        if (authState !is AuthState.AuthError) return
+
+        when (authState.errorCode) {
+            ErrorCode.INVALID_CREDENTIALS -> {
+                _emailError.value = " "
+                _passwordError.value = " "
             }
+            ErrorCode.EMAIL_ADDRESS_INVALID,
+            ErrorCode.VALIDATION_FAILED -> { _emailError.value = "Invalid email" }
+            ErrorCode.EMAIL_EXISTS,
+            ErrorCode.USER_ALREADY_EXISTS -> { _emailError.value = "Email already in use" }
+            ErrorCode.WEAK_PASSWORD -> { _passwordError.value = "Weak password" }
+            else -> { Unit }
         }
     }
 

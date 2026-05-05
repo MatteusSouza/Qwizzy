@@ -9,6 +9,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.askceny.domain.repositories.AuthRepository
 import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
+import com.example.askceny.domain.validation.AuthValidationResult
+import com.example.askceny.domain.validation.AuthValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -45,38 +47,45 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     fun signUp(displayName: String, email: String, password: String) {
+        val validation = AuthValidator.validateSignUp(displayName, email, password)
+        applyValidationResult(validation)
+        if (!validation.isValid) {
+            _authState.value = AuthState.Unauthenticated
+            return
+        }
+
         _authState.value = AuthState.Loading
-
-        val displayName = displayName.trim()
-        val email = email.trim()
-        val password = password.trim()
-        if (displayName.isEmpty()) {_displayNameError.value = "Name can not be empty"}
-        if (email.isEmpty()) {_emailError.value = "Email can not be empty"}
-        if (password.isEmpty()) {_passwordError.value = "Password can not be empty"}
-        if(email.isEmpty() || password.isEmpty()) { return }
-
         viewModelScope.launch {
-            val res = authRepository.createUserWithEmailAndPassword(displayName, email, password)
+            val res = authRepository.createUserWithEmailAndPassword(
+                displayName.trim(),
+                email.trim(),
+                password.trim()
+            )
             _authState.value = res
             applyAuthError(res)
         }
     }
 
     fun signIn(email: String, password: String) {
+        val validation = AuthValidator.validateSignIn(email, password)
+        applyValidationResult(validation)
+        if (!validation.isValid) {
+            _authState.value = AuthState.Unauthenticated
+            return
+        }
+
         _authState.value = AuthState.Loading
-
-        val email = email.trim()
-        val password = password.trim()
-
-        if (email.isEmpty()) {_emailError.value = "Email can not be empty"}
-        if (password.isEmpty()) {_passwordError.value = "Password can not be empty"}
-        if(email.isEmpty() || password.isEmpty()) { return }
-
         viewModelScope.launch {
-            val res = authRepository.signInWithEmailAndPassword(email, password)
+            val res = authRepository.signInWithEmailAndPassword(email.trim(), password.trim())
             _authState.value = res
             applyAuthError(res)
         }
+    }
+
+    private fun applyValidationResult(validation: AuthValidationResult) {
+        _displayNameError.value = validation.displayNameError
+        _emailError.value = validation.emailError
+        _passwordError.value = validation.passwordError
     }
 
     private fun applyAuthError(authState: AuthState) {

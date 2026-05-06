@@ -2,6 +2,7 @@ package com.example.askceny.data.remote.api
 
 import com.example.askceny.domain.models.User
 import com.example.askceny.domain.types.ErrorCode
+import kotlinx.coroutines.CancellationException
 
 interface AuthRemoteDataSource {
     suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthRemoteResult
@@ -67,7 +68,9 @@ class SupabaseAuthRemoteDataSource(
     }
 
     override suspend fun signInWithEmail(email: String, password: String): AuthRemoteResult {
-        TODO("Supabase email sign-in not yet implemented")
+        return runAuthCall {
+            sessionClient.signInWithEmail(email, password)
+        }
     }
 
     override suspend fun signUpWithGoogle(idToken: String, nonce: String?): AuthRemoteResult {
@@ -100,5 +103,26 @@ class SupabaseAuthRemoteDataSource(
             about = "",
             website = "",
         )
+    }
+
+    private suspend fun runAuthCall(block: suspend () -> SupabaseAuthSuccess): AuthRemoteResult {
+        return try {
+            block().toRemoteResult()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: SupabaseAuthFailureException) {
+            AuthRemoteResult.Failure(ErrorCode.fromSupabaseCode(e.supabaseCode))
+        } catch (e: Exception) {
+            AuthRemoteResult.Failure(ErrorCode.UNEXPECTED_FAILURE)
+        }
+    }
+
+    private fun SupabaseAuthSuccess.toRemoteResult(): AuthRemoteResult {
+        return when (this) {
+            is SupabaseAuthSuccess.Authenticated -> AuthRemoteResult.Authenticated(user?.toDomainUser())
+            is SupabaseAuthSuccess.EmailConfirmationRequired -> {
+                AuthRemoteResult.EmailConfirmationRequired(user?.toDomainUser())
+            }
+        }
     }
 }

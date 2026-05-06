@@ -19,11 +19,11 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun signUpWithGoogle(idToken: String, nonce: String?): AuthState {
-        TODO("Supabase Google sign-up not yet implemented")
+        return remoteDataSource.signUpWithGoogle(idToken, nonce).toAuthState()
     }
 
     override suspend fun signInWithGoogle(idToken: String, nonce: String?): AuthState {
-        TODO("Supabase Google sign-in not yet implemented")
+        return remoteDataSource.signInWithGoogle(idToken, nonce).toAuthState()
     }
 
     override fun getCurrentUser(): User? {

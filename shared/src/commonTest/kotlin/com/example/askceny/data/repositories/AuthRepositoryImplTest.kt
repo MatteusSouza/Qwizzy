@@ -122,6 +122,85 @@ class AuthRepositoryImplTest {
         assertEquals(ErrorCode.INVALID_CREDENTIALS, error.errorCode)
     }
 
+    @Test
+    fun `google sign-in passes ID token and nonce to Supabase auth`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            signInWithGoogleResult = AuthRemoteResult.Authenticated(sampleUser)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.signInWithGoogle(
+            idToken = "google-id-token",
+            nonce = "raw-nonce"
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            GoogleAuthRequest(
+                idToken = "google-id-token",
+                nonce = "raw-nonce"
+            ),
+            remoteDataSource.googleSignInRequest
+        )
+    }
+
+    @Test
+    fun `google sign-in allows missing nonce for flows that do not provide one`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            signInWithGoogleResult = AuthRemoteResult.Authenticated(sampleUser)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.signInWithGoogle(idToken = "google-id-token")
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            GoogleAuthRequest(
+                idToken = "google-id-token",
+                nonce = null
+            ),
+            remoteDataSource.googleSignInRequest
+        )
+    }
+
+    @Test
+    fun `google sign-up uses the same Supabase ID token contract`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            signUpWithGoogleResult = AuthRemoteResult.Authenticated(sampleUser)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.signUpWithGoogle(
+            idToken = "google-id-token",
+            nonce = "raw-nonce"
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            GoogleAuthRequest(
+                idToken = "google-id-token",
+                nonce = "raw-nonce"
+            ),
+            remoteDataSource.googleSignUpRequest
+        )
+    }
+
+    @Test
+    fun `google auth maps Supabase auth failures to AuthError`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            signInWithGoogleResult = AuthRemoteResult.Failure(ErrorCode.NO_AUTHORIZATION)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.signInWithGoogle(
+            idToken = "invalid-google-id-token",
+            nonce = "raw-nonce"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.NO_AUTHORIZATION, error.errorCode)
+    }
+
     private data class EmailSignUpRequest(
         val displayName: String,
         val email: String,

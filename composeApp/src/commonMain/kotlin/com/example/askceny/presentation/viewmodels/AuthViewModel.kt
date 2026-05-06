@@ -11,6 +11,7 @@ import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
 import com.example.askceny.domain.validation.AuthValidationResult
 import com.example.askceny.domain.validation.AuthValidator
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -33,7 +34,15 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
-            val currentUser = authRepository.getCurrentUser()
+            val currentUser = try {
+                authRepository.getCurrentUser()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                println("AUTH_BOOTSTRAP: current user lookup failed: ${e.message}")
+                null
+            }
+
             if (currentUser != null) {
                 _authState.value = AuthState.Authenticated
             }else{

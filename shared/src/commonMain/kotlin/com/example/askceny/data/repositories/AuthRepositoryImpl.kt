@@ -1,6 +1,7 @@
 package com.example.askceny.data.repositories
 
 import com.example.askceny.data.remote.api.AuthRemoteDataSource
+import com.example.askceny.data.remote.api.AuthRemoteResult
 import com.example.askceny.data.remote.api.SupabaseAuthRemoteDataSource
 import com.example.askceny.domain.models.User
 import com.example.askceny.domain.repositories.AuthRepository
@@ -10,11 +11,11 @@ class AuthRepositoryImpl(
     private val remoteDataSource: AuthRemoteDataSource = SupabaseAuthRemoteDataSource(),
 ) : AuthRepository {
     override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthState {
-        TODO("Supabase email sign-up not yet implemented")
+        return remoteDataSource.signUpWithEmail(displayName, email, password).toAuthState()
     }
 
     override suspend fun signInWithEmail(email: String, password: String): AuthState {
-        TODO("Supabase email sign-in not yet implemented")
+        return remoteDataSource.signInWithEmail(email, password).toAuthState()
     }
 
     override suspend fun signUpWithGoogle(idToken: String, nonce: String?): AuthState {
@@ -31,5 +32,13 @@ class AuthRepositoryImpl(
 
     override fun signOut() {
         remoteDataSource.signOut()
+    }
+
+    private fun AuthRemoteResult.toAuthState(): AuthState {
+        return when (this) {
+            is AuthRemoteResult.Authenticated -> AuthState.Authenticated
+            is AuthRemoteResult.EmailConfirmationRequired -> AuthState.EmailConfirmationRequired
+            is AuthRemoteResult.Failure -> AuthState.AuthError(errorCode)
+        }
     }
 }

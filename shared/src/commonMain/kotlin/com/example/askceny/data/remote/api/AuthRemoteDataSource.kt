@@ -21,6 +21,7 @@ sealed class AuthRemoteResult {
 interface SupabaseAuthSessionClient {
     fun currentUserOrNull(): SupabaseAuthUser?
     fun signOut()
+    suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess
 }
 
 data class SupabaseAuthUser(
@@ -33,7 +34,21 @@ data class SupabaseAuthUser(
 object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
     override fun currentUserOrNull(): SupabaseAuthUser? = null
     override fun signOut() {}
+
+    override suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
 }
+
+sealed class SupabaseAuthSuccess {
+    data class Authenticated(val user: SupabaseAuthUser? = null): SupabaseAuthSuccess()
+    data class EmailConfirmationRequired(val user: SupabaseAuthUser? = null): SupabaseAuthSuccess()
+}
+
+class SupabaseAuthFailureException(
+    val supabaseCode: String?,
+    cause: Throwable? = null,
+) : Exception(supabaseCode, cause)
 
 class SupabaseAuthRemoteDataSource(
     private val sessionClient: SupabaseAuthSessionClient = EmptySupabaseAuthSessionClient,

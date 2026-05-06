@@ -9,6 +9,8 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AuthRepositoryImplTest {
     @Test
@@ -201,6 +203,37 @@ class AuthRepositoryImplTest {
         assertEquals(ErrorCode.NO_AUTHORIZATION, error.errorCode)
     }
 
+    @Test
+    fun `current user returns user when Supabase session is authenticated`() {
+        val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = sampleUser)
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.getCurrentUser()
+
+        assertEquals(sampleUser, result)
+    }
+
+    @Test
+    fun `current user returns null when Supabase has no authenticated session`() {
+        val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = null)
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.getCurrentUser()
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `current user lookup does not crash on cold start without a Supabase session`() {
+        val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = null)
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = runCatching { repository.getCurrentUser() }
+
+        assertTrue(result.isSuccess)
+        assertNull(result.getOrThrow())
+    }
+
     private data class EmailSignUpRequest(
         val displayName: String,
         val email: String,
@@ -222,6 +255,7 @@ class AuthRepositoryImplTest {
         private val signInWithEmailResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
         private val signUpWithGoogleResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
         private val signInWithGoogleResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
+        private val currentUser: User? = sampleUser,
     ) : AuthRemoteDataSource {
         var emailSignUpRequest: EmailSignUpRequest? = null
             private set
@@ -254,7 +288,7 @@ class AuthRepositoryImplTest {
             return signInWithGoogleResult
         }
 
-        override fun getCurrentUser(): User? = sampleUser
+        override fun getCurrentUser(): User? = currentUser
 
         override fun signOut() {
             signOutCalls += 1

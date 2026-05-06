@@ -20,6 +20,7 @@ sealed class AuthRemoteResult {
 
 interface SupabaseAuthSessionClient {
     fun currentUserOrNull(): SupabaseAuthUser?
+    fun signOut()
 }
 
 data class SupabaseAuthUser(
@@ -31,6 +32,7 @@ data class SupabaseAuthUser(
 
 object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
     override fun currentUserOrNull(): SupabaseAuthUser? = null
+    override fun signOut() {}
 }
 
 class SupabaseAuthRemoteDataSource(
@@ -57,7 +59,9 @@ class SupabaseAuthRemoteDataSource(
     }
 
     override fun signOut() {
-        TODO("Supabase sign-out not yet implemented")
+        if (sessionClient.currentUserOrNull() != null) {
+            sessionClient.signOut()
+        }
     }
 
     private fun SupabaseAuthUser.toDomainUser(): User {

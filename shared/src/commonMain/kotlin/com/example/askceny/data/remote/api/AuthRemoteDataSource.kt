@@ -18,7 +18,24 @@ sealed class AuthRemoteResult {
     data class Failure(val errorCode: ErrorCode): AuthRemoteResult()
 }
 
-class SupabaseAuthRemoteDataSource : AuthRemoteDataSource {
+interface SupabaseAuthSessionClient {
+    fun currentUserOrNull(): SupabaseAuthUser?
+}
+
+data class SupabaseAuthUser(
+    val id: String,
+    val email: String?,
+    val displayName: String? = null,
+    val username: String? = null,
+)
+
+object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
+    override fun currentUserOrNull(): SupabaseAuthUser? = null
+}
+
+class SupabaseAuthRemoteDataSource(
+    private val sessionClient: SupabaseAuthSessionClient = EmptySupabaseAuthSessionClient,
+) : AuthRemoteDataSource {
     override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthRemoteResult {
         TODO("Supabase email sign-up not yet implemented")
     }
@@ -36,10 +53,24 @@ class SupabaseAuthRemoteDataSource : AuthRemoteDataSource {
     }
 
     override fun getCurrentUser(): User? {
-        TODO("Supabase current user lookup not yet implemented")
+        return sessionClient.currentUserOrNull()?.toDomainUser()
     }
 
     override fun signOut() {
         TODO("Supabase sign-out not yet implemented")
+    }
+
+    private fun SupabaseAuthUser.toDomainUser(): User {
+        val fallbackName = email?.substringBefore("@").orEmpty()
+        val resolvedDisplayName = displayName ?: fallbackName
+
+        return User(
+            id = id,
+            displayName = resolvedDisplayName,
+            username = username ?: resolvedDisplayName,
+            email = email.orEmpty(),
+            about = "",
+            website = "",
+        )
     }
 }

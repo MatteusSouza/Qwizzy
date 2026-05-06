@@ -234,6 +234,27 @@ class AuthRepositoryImplTest {
         assertNull(result.getOrThrow())
     }
 
+    @Test
+    fun `sign-out delegates to Supabase remote data source`() {
+        val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = sampleUser)
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        repository.signOut()
+
+        assertEquals(1, remoteDataSource.signOutCalls)
+    }
+
+    @Test
+    fun `sign-out does not fail without an active Supabase session`() {
+        val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = null)
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = runCatching { repository.signOut() }
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, remoteDataSource.signOutCalls)
+    }
+
     private data class EmailSignUpRequest(
         val displayName: String,
         val email: String,

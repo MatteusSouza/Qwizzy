@@ -24,6 +24,8 @@ interface SupabaseAuthSessionClient {
     fun signOut()
     suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess
     suspend fun signUpWithEmail(displayName: String, email: String, password: String): SupabaseAuthSuccess
+    suspend fun signInWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess
+    suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess
 }
 
 data class SupabaseAuthUser(
@@ -46,6 +48,14 @@ object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
         email: String,
         password: String,
     ): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
+
+    override suspend fun signInWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
+
+    override suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
         throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
     }
 }

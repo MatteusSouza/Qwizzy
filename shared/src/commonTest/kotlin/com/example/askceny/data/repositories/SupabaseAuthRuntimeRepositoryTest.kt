@@ -108,6 +108,66 @@ class SupabaseAuthRuntimeRepositoryTest {
         assertEquals(ErrorCode.USER_ALREADY_EXISTS, error.errorCode)
     }
 
+    @Test
+    fun `runtime google sign-in passes ID token and nonce to Supabase`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signInWithGoogleResult = SupabaseAuthSuccess.Authenticated(sampleSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signInWithGoogle(
+            idToken = "google-id-token",
+            nonce = "raw-nonce"
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            GoogleAuthRequest(
+                idToken = "google-id-token",
+                nonce = "raw-nonce"
+            ),
+            client.googleSignInRequest
+        )
+    }
+
+    @Test
+    fun `runtime google sign-in maps Supabase authorization failure to auth error`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signInWithGoogleError = SupabaseAuthFailureException("no_authorization")
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signInWithGoogle(
+            idToken = "invalid-google-id-token",
+            nonce = "raw-nonce"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.NO_AUTHORIZATION, error.errorCode)
+    }
+
+    @Test
+    fun `runtime google sign-up uses the same Supabase ID token flow`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signUpWithGoogleResult = SupabaseAuthSuccess.Authenticated(sampleSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signUpWithGoogle(
+            idToken = "google-id-token",
+            nonce = null
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            GoogleAuthRequest(
+                idToken = "google-id-token",
+                nonce = null
+            ),
+            client.googleSignUpRequest
+        )
+    }
+
     private data class EmailSignInRequest(
         val email: String,
         val password: String,
@@ -119,6 +179,11 @@ class SupabaseAuthRuntimeRepositoryTest {
         val password: String,
     )
 
+    private data class GoogleAuthRequest(
+        val idToken: String,
+        val nonce: String?,
+    )
+
     private class ScriptedSupabaseAuthSessionClient(
         private val signInWithEmailResult: SupabaseAuthSuccess =
             SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
@@ -126,10 +191,20 @@ class SupabaseAuthRuntimeRepositoryTest {
         private val signUpWithEmailResult: SupabaseAuthSuccess =
             SupabaseAuthSuccess.EmailConfirmationRequired(sampleSupabaseUser),
         private val signUpWithEmailError: SupabaseAuthFailureException? = null,
+        private val signInWithGoogleResult: SupabaseAuthSuccess =
+            SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
+        private val signInWithGoogleError: SupabaseAuthFailureException? = null,
+        private val signUpWithGoogleResult: SupabaseAuthSuccess =
+            SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
+        private val signUpWithGoogleError: SupabaseAuthFailureException? = null,
     ) : SupabaseAuthSessionClient {
         var emailSignInRequest: EmailSignInRequest? = null
             private set
         var emailSignUpRequest: EmailSignUpRequest? = null
+            private set
+        var googleSignInRequest: GoogleAuthRequest? = null
+            private set
+        var googleSignUpRequest: GoogleAuthRequest? = null
             private set
 
         override fun currentUserOrNull(): SupabaseAuthUser? = null
@@ -150,6 +225,18 @@ class SupabaseAuthRuntimeRepositoryTest {
             emailSignUpRequest = EmailSignUpRequest(displayName, email, password)
             signUpWithEmailError?.let { throw it }
             return signUpWithEmailResult
+        }
+
+        override suspend fun signInWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
+            googleSignInRequest = GoogleAuthRequest(idToken, nonce)
+            signInWithGoogleError?.let { throw it }
+            return signInWithGoogleResult
+        }
+
+        override suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
+            googleSignUpRequest = GoogleAuthRequest(idToken, nonce)
+            signUpWithGoogleError?.let { throw it }
+            return signUpWithGoogleResult
         }
     }
 

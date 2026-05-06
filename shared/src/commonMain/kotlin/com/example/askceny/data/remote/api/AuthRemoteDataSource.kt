@@ -64,7 +64,9 @@ class SupabaseAuthRemoteDataSource(
     private val sessionClient: SupabaseAuthSessionClient = EmptySupabaseAuthSessionClient,
 ) : AuthRemoteDataSource {
     override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthRemoteResult {
-        TODO("Supabase email sign-up not yet implemented")
+        return runAuthCall {
+            sessionClient.signUpWithEmail(displayName, email, password)
+        }
     }
 
     override suspend fun signInWithEmail(email: String, password: String): AuthRemoteResult {

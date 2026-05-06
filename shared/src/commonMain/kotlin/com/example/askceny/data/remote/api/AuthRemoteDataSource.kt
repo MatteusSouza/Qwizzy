@@ -22,6 +22,7 @@ interface SupabaseAuthSessionClient {
     fun currentUserOrNull(): SupabaseAuthUser?
     fun signOut()
     suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess
+    suspend fun signUpWithEmail(displayName: String, email: String, password: String): SupabaseAuthSuccess
 }
 
 data class SupabaseAuthUser(
@@ -36,6 +37,14 @@ object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
     override fun signOut() {}
 
     override suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
+
+    override suspend fun signUpWithEmail(
+        displayName: String,
+        email: String,
+        password: String,
+    ): SupabaseAuthSuccess {
         throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
     }
 }

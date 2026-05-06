@@ -51,7 +51,70 @@ class SupabaseAuthRuntimeRepositoryTest {
         assertEquals(ErrorCode.INVALID_CREDENTIALS, error.errorCode)
     }
 
+    @Test
+    fun `runtime email sign-up returns confirmation required when Supabase requires email confirmation`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signUpWithEmailResult = SupabaseAuthSuccess.EmailConfirmationRequired(sampleSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signUpWithEmail(
+            displayName = "Ada Lovelace",
+            email = "ada@example.com",
+            password = "correct-horse-battery-staple"
+        )
+
+        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals(
+            EmailSignUpRequest(
+                displayName = "Ada Lovelace",
+                email = "ada@example.com",
+                password = "correct-horse-battery-staple"
+            ),
+            client.emailSignUpRequest
+        )
+    }
+
+    @Test
+    fun `runtime email sign-up returns authenticated when Supabase creates an immediate session`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signUpWithEmailResult = SupabaseAuthSuccess.Authenticated(sampleSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signUpWithEmail(
+            displayName = "Ada Lovelace",
+            email = "ada@example.com",
+            password = "correct-horse-battery-staple"
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+    }
+
+    @Test
+    fun `runtime email sign-up maps Supabase existing user failure to auth error`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signUpWithEmailError = SupabaseAuthFailureException("user_already_exists")
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signUpWithEmail(
+            displayName = "Ada Lovelace",
+            email = "ada@example.com",
+            password = "correct-horse-battery-staple"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.USER_ALREADY_EXISTS, error.errorCode)
+    }
+
     private data class EmailSignInRequest(
+        val email: String,
+        val password: String,
+    )
+
+    private data class EmailSignUpRequest(
+        val displayName: String,
         val email: String,
         val password: String,
     )
@@ -60,8 +123,13 @@ class SupabaseAuthRuntimeRepositoryTest {
         private val signInWithEmailResult: SupabaseAuthSuccess =
             SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
         private val signInWithEmailError: SupabaseAuthFailureException? = null,
+        private val signUpWithEmailResult: SupabaseAuthSuccess =
+            SupabaseAuthSuccess.EmailConfirmationRequired(sampleSupabaseUser),
+        private val signUpWithEmailError: SupabaseAuthFailureException? = null,
     ) : SupabaseAuthSessionClient {
         var emailSignInRequest: EmailSignInRequest? = null
+            private set
+        var emailSignUpRequest: EmailSignUpRequest? = null
             private set
 
         override fun currentUserOrNull(): SupabaseAuthUser? = null
@@ -72,6 +140,16 @@ class SupabaseAuthRuntimeRepositoryTest {
             emailSignInRequest = EmailSignInRequest(email, password)
             signInWithEmailError?.let { throw it }
             return signInWithEmailResult
+        }
+
+        override suspend fun signUpWithEmail(
+            displayName: String,
+            email: String,
+            password: String,
+        ): SupabaseAuthSuccess {
+            emailSignUpRequest = EmailSignUpRequest(displayName, email, password)
+            signUpWithEmailError?.let { throw it }
+            return signUpWithEmailResult
         }
     }
 

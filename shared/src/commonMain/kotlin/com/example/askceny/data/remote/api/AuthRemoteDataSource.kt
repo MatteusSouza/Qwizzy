@@ -90,7 +90,9 @@ class SupabaseAuthRemoteDataSource(
     }
 
     override suspend fun signInWithGoogle(idToken: String, nonce: String?): AuthRemoteResult {
-        TODO("Supabase Google sign-in not yet implemented")
+        return runAuthCall {
+            sessionClient.signInWithGoogle(idToken, nonce)
+        }
     }
 
     override fun getCurrentUser(): User? {

@@ -102,14 +102,15 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
         when (authState.errorCode) {
             ErrorCode.INVALID_CREDENTIALS -> {
-                _emailError.value = " "
-                _passwordError.value = " "
+                _emailError.value = "Invalid email or password"
+                _passwordError.value = "Invalid email or password"
             }
             ErrorCode.EMAIL_ADDRESS_INVALID,
             ErrorCode.VALIDATION_FAILED -> { _emailError.value = "Invalid email" }
             ErrorCode.EMAIL_EXISTS,
             ErrorCode.USER_ALREADY_EXISTS -> { _emailError.value = "Email already in use" }
             ErrorCode.WEAK_PASSWORD -> { _passwordError.value = "Weak password" }
+            ErrorCode.UNEXPECTED_FAILURE -> { _emailError.value = "Something went wrong. Try again." }
             else -> { Unit }
         }
     }

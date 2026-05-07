@@ -23,6 +23,8 @@ compose-multiplatform = "1.9.3"
 ktor = "3.0.0"
 koin = "4.1.1"
 kotlinx-coroutines = "1.10.2"
+supabase = "3.6.0"
+desugarJdkLibs = "2.1.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +63,9 @@ sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.r
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
+supabase-kt = { module = "io.github.jan-tennert.supabase:supabase-kt", version.ref = "supabase" }
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -3,6 +3,7 @@ package com.example.askceny.presentation.viewmodels
 import com.example.askceny.domain.models.User
 import com.example.askceny.domain.repositories.AuthRepository
 import com.example.askceny.domain.types.AuthState
+import com.example.askceny.domain.types.ErrorCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -88,6 +89,97 @@ class AuthViewModelTest {
             assertEquals(0, repository.signUpCalls)
             assertEquals("Invalid email", viewModel.emailError.value)
             assertEquals(AuthState.Unauthenticated, viewModel.authState.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `invalid credentials show visible email and password errors`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signInResult = AuthState.AuthError(ErrorCode.INVALID_CREDENTIALS)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signIn("user@example.com", "wrong-password")
+            advanceUntilIdle()
+
+            assertEquals("Invalid email or password", viewModel.emailError.value)
+            assertEquals("Invalid email or password", viewModel.passwordError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `unexpected auth failure shows generic visible email error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signInResult = AuthState.AuthError(ErrorCode.UNEXPECTED_FAILURE)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signIn("user@example.com", "password")
+            advanceUntilIdle()
+
+            assertEquals("Something went wrong. Try again.", viewModel.emailError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `supabase email validation failure maps to email field`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signInResult = AuthState.AuthError(ErrorCode.VALIDATION_FAILED)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signIn("user@example.com", "password")
+            advanceUntilIdle()
+
+            assertEquals("Invalid email", viewModel.emailError.value)
+            assertEquals("", viewModel.passwordError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `weak password auth failure maps to password field`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signUpResult = AuthState.AuthError(ErrorCode.WEAK_PASSWORD)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signUp("User", "user@example.com", "weak")
+            advanceUntilIdle()
+
+            assertEquals("", viewModel.emailError.value)
+            assertEquals("Weak password", viewModel.passwordError.value)
         } finally {
             Dispatchers.resetMain()
         }

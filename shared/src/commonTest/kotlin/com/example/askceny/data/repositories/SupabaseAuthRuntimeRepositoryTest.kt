@@ -198,6 +198,8 @@ class SupabaseAuthRuntimeRepositoryTest {
             SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
         private val signUpWithGoogleError: SupabaseAuthFailureException? = null,
     ) : SupabaseAuthSessionClient {
+        override val isPlaceholder: Boolean = false
+
         var emailSignInRequest: EmailSignInRequest? = null
             private set
         var emailSignUpRequest: EmailSignUpRequest? = null

@@ -10,6 +10,10 @@ import com.example.askceny.domain.types.AuthState
 class AuthRepositoryImpl(
     private val remoteDataSource: AuthRemoteDataSource = SupabaseAuthRemoteDataSource(),
 ) : AuthRepository {
+    internal val isUsingPlaceholderAuthClient: Boolean
+        get() = remoteDataSource is SupabaseAuthRemoteDataSource &&
+            remoteDataSource.isUsingPlaceholderClient
+
     override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthState {
         return remoteDataSource.signUpWithEmail(displayName, email, password).toAuthState()
     }

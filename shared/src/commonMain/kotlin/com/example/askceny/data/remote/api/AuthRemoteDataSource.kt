@@ -20,6 +20,7 @@ sealed class AuthRemoteResult {
 }
 
 interface SupabaseAuthSessionClient {
+    val isPlaceholder: Boolean
     fun currentUserOrNull(): SupabaseAuthUser?
     fun signOut()
     suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess
@@ -36,6 +37,8 @@ data class SupabaseAuthUser(
 )
 
 object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
+    override val isPlaceholder: Boolean = true
+
     override fun currentUserOrNull(): SupabaseAuthUser? = null
     override fun signOut() {}
 
@@ -73,6 +76,9 @@ class SupabaseAuthFailureException(
 class SupabaseAuthRemoteDataSource(
     private val sessionClient: SupabaseAuthSessionClient = EmptySupabaseAuthSessionClient,
 ) : AuthRemoteDataSource {
+    internal val isUsingPlaceholderClient: Boolean
+        get() = sessionClient.isPlaceholder
+
     override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthRemoteResult {
         return runAuthCall {
             sessionClient.signUpWithEmail(displayName, email, password)

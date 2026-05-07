@@ -17,7 +17,7 @@ object AuthValidator {
         val trimmedPassword = password.trim()
 
         return AuthValidationResult(
-            emailError = if (trimmedEmail.isEmpty()) EMAIL_REQUIRED else "",
+            emailError = validateEmail(trimmedEmail),
             passwordError = if (trimmedPassword.isEmpty()) PASSWORD_REQUIRED else "",
         )
     }
@@ -29,12 +29,22 @@ object AuthValidator {
 
         return AuthValidationResult(
             displayNameError = if (trimmedDisplayName.isEmpty()) DISPLAY_NAME_REQUIRED else "",
-            emailError = if (trimmedEmail.isEmpty()) EMAIL_REQUIRED else "",
+            emailError = validateEmail(trimmedEmail),
             passwordError = if (trimmedPassword.isEmpty()) PASSWORD_REQUIRED else "",
         )
     }
 
+    private fun validateEmail(email: String): String {
+        return when {
+            email.isEmpty() -> EMAIL_REQUIRED
+            !EMAIL_PATTERN.matches(email) -> INVALID_EMAIL
+            else -> ""
+        }
+    }
+
     private const val DISPLAY_NAME_REQUIRED = "Name can not be empty"
     private const val EMAIL_REQUIRED = "Email can not be empty"
+    private const val INVALID_EMAIL = "Invalid email"
     private const val PASSWORD_REQUIRED = "Password can not be empty"
+    private val EMAIL_PATTERN = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
 }

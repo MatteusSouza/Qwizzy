@@ -25,6 +25,15 @@ class AuthValidatorTest {
     }
 
     @Test
+    fun `sign-in rejects malformed email`() {
+        val result = AuthValidator.validateSignIn("not-an-email", "password")
+
+        assertFalse(result.isValid)
+        assertEquals("Invalid email", result.emailError)
+        assertEquals("", result.passwordError)
+    }
+
+    @Test
     fun `sign-in trims whitespace before validation`() {
         val result = AuthValidator.validateSignIn("  user@example.com  ", "  password  ")
 
@@ -61,6 +70,16 @@ class AuthValidatorTest {
         assertEquals("", result.displayNameError)
         assertEquals("", result.emailError)
         assertEquals("Password can not be empty", result.passwordError)
+    }
+
+    @Test
+    fun `sign-up rejects malformed email`() {
+        val result = AuthValidator.validateSignUp("User", "not-an-email", "password")
+
+        assertFalse(result.isValid)
+        assertEquals("", result.displayNameError)
+        assertEquals("Invalid email", result.emailError)
+        assertEquals("", result.passwordError)
     }
 
     @Test

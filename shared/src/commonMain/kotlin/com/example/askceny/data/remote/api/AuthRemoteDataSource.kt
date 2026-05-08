@@ -74,7 +74,7 @@ class SupabaseAuthFailureException(
 ) : Exception(supabaseCode, cause)
 
 class SupabaseAuthRemoteDataSource(
-    private val sessionClient: SupabaseAuthSessionClient = EmptySupabaseAuthSessionClient,
+    private val sessionClient: SupabaseAuthSessionClient = SupabaseAuthSessionClientFactory.create(),
 ) : AuthRemoteDataSource {
     internal val isUsingPlaceholderClient: Boolean
         get() = sessionClient.isPlaceholder

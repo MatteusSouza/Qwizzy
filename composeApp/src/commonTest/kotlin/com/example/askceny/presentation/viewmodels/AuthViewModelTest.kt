@@ -185,6 +185,146 @@ class AuthViewModelTest {
         }
     }
 
+    @Test
+    fun `sign-up exposes pending email confirmation state with normalized email`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signUpResult = AuthState.EmailConfirmationRequired("user@example.com")
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signUp("User", " user@example.com ", "password")
+            advanceUntilIdle()
+
+            assertEquals(AuthState.EmailConfirmationRequired("user@example.com"), viewModel.authState.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `successful email otp verification authenticates user`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val repository = RecordingAuthRepository(
+                verifyEmailOtpResult = AuthState.Authenticated
+            )
+            val viewModel = AuthViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.verifyEmailOtp("user@example.com", " 123456 ")
+            advanceUntilIdle()
+
+            assertEquals(
+                EmailOtpRequest(
+                    email = "user@example.com",
+                    token = "123456"
+                ),
+                repository.verifyEmailOtpRequest
+            )
+            assertEquals(AuthState.Authenticated, viewModel.authState.value)
+            assertEquals("", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `invalid email otp shows visible verification error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    verifyEmailOtpResult = AuthState.AuthError(ErrorCode.VALIDATION_FAILED)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.verifyEmailOtp("user@example.com", "000000")
+            advanceUntilIdle()
+
+            assertEquals("Invalid or expired verification code", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `blank email otp does not call repository`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val repository = RecordingAuthRepository()
+            val viewModel = AuthViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.verifyEmailOtp("user@example.com", "   ")
+            advanceUntilIdle()
+
+            assertEquals(0, repository.verifyEmailOtpCalls)
+            assertEquals("Enter the verification code", viewModel.otpError.value)
+            assertEquals(AuthState.Unauthenticated, viewModel.authState.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `resend sign-up email otp keeps pending state and exposes success message`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val repository = RecordingAuthRepository(
+                resendSignUpEmailOtpResult = AuthState.EmailConfirmationRequired("user@example.com")
+            )
+            val viewModel = AuthViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.resendSignUpEmailOtp("user@example.com")
+            advanceUntilIdle()
+
+            assertEquals("user@example.com", repository.resendSignUpEmailOtpRequest)
+            assertEquals(AuthState.EmailConfirmationRequired("user@example.com"), viewModel.authState.value)
+            assertEquals("Verification code resent", viewModel.otpInfo.value)
+            assertEquals("", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `resend sign-up email otp maps rate limit to visible verification error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    resendSignUpEmailOtpResult = AuthState.AuthError(ErrorCode.OVER_REQUEST_RATE_LIMIT)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.resendSignUpEmailOtp("user@example.com")
+            advanceUntilIdle()
+
+            assertEquals("Too many attempts. Try again later.", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
     private class FailingBootstrapAuthRepository : AuthRepository {
         override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthState {
             return AuthState.Unauthenticated
@@ -220,10 +360,18 @@ class AuthViewModelTest {
     private class RecordingAuthRepository(
         private val signInResult: AuthState = AuthState.Authenticated,
         private val signUpResult: AuthState = AuthState.Authenticated,
+        private val verifyEmailOtpResult: AuthState = AuthState.Authenticated,
+        private val resendSignUpEmailOtpResult: AuthState = AuthState.Unauthenticated,
     ) : AuthRepository {
         var signInCalls = 0
             private set
         var signUpCalls = 0
+            private set
+        var verifyEmailOtpCalls = 0
+            private set
+        var verifyEmailOtpRequest: EmailOtpRequest? = null
+            private set
+        var resendSignUpEmailOtpRequest: String? = null
             private set
 
         override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthState {
@@ -245,15 +393,23 @@ class AuthViewModelTest {
         }
 
         override suspend fun verifyEmailOtp(email: String, token: String): AuthState {
-            return AuthState.Unauthenticated
+            verifyEmailOtpCalls += 1
+            verifyEmailOtpRequest = EmailOtpRequest(email, token)
+            return verifyEmailOtpResult
         }
 
         override suspend fun resendSignUpEmailOtp(email: String): AuthState {
-            return AuthState.Unauthenticated
+            resendSignUpEmailOtpRequest = email
+            return resendSignUpEmailOtpResult
         }
 
         override fun getCurrentUser(): User? = null
 
         override fun signOut() {}
     }
+
+    private data class EmailOtpRequest(
+        val email: String,
+        val token: String,
+    )
 }

@@ -4,6 +4,6 @@ sealed class AuthState {
     object Loading: AuthState()
     object Authenticated: AuthState()
     object Unauthenticated: AuthState()
-    object EmailConfirmationRequired: AuthState()
+    data class EmailConfirmationRequired(val email: String): AuthState()
     data class AuthError(val errorCode: ErrorCode): AuthState()
 }

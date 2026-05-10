@@ -30,6 +30,12 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _displayNameError : MutableStateFlow<String> = MutableStateFlow<String>("")
     val displayNameError: StateFlow<String> = _displayNameError
 
+    private val _otpError : MutableStateFlow<String> = MutableStateFlow("")
+    val otpError: StateFlow<String> = _otpError
+
+    private val _otpInfo : MutableStateFlow<String> = MutableStateFlow("")
+    val otpInfo: StateFlow<String> = _otpInfo
+
     init {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -91,6 +97,37 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun verifyEmailOtp(email: String, token: String) {
+        val normalizedEmail = email.trim()
+        val normalizedToken = token.trim()
+        _otpInfo.value = ""
+
+        if (normalizedToken.isBlank()) {
+            _otpError.value = "Enter the verification code"
+            return
+        }
+
+        _otpError.value = ""
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            val res = authRepository.verifyEmailOtp(normalizedEmail, normalizedToken)
+            _authState.value = res
+            applyOtpResult(res)
+        }
+    }
+
+    fun resendSignUpEmailOtp(email: String) {
+        val normalizedEmail = email.trim()
+        _otpError.value = ""
+        _otpInfo.value = ""
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            val res = authRepository.resendSignUpEmailOtp(normalizedEmail)
+            _authState.value = res
+            applyOtpResult(res, showResendSuccess = true)
+        }
+    }
+
     private fun applyValidationResult(validation: AuthValidationResult) {
         _displayNameError.value = validation.displayNameError
         _emailError.value = validation.emailError
@@ -115,6 +152,33 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    private fun applyOtpResult(authState: AuthState, showResendSuccess: Boolean = false) {
+        when (authState) {
+            is AuthState.AuthError -> {
+                _otpError.value = when (authState.errorCode) {
+                    ErrorCode.INVALID_CREDENTIALS,
+                    ErrorCode.VALIDATION_FAILED,
+                    ErrorCode.EMAIL_NOT_CONFIRMED,
+                    ErrorCode.SESSION_EXPIRED,
+                    ErrorCode.SESSION_NOT_FOUND -> "Invalid or expired verification code"
+                    ErrorCode.OVER_REQUEST_RATE_LIMIT -> "Too many attempts. Try again later."
+                    ErrorCode.REQUEST_TIMEOUT -> "Request timed out. Try again."
+                    else -> "Something went wrong. Try again."
+                }
+            }
+            is AuthState.EmailConfirmationRequired -> {
+                if (showResendSuccess) {
+                    _otpInfo.value = "Verification code resent"
+                }
+            }
+            AuthState.Authenticated -> {
+                _otpError.value = ""
+                _otpInfo.value = ""
+            }
+            else -> Unit
+        }
+    }
+
     fun signOut() {
         authRepository.signOut()
         _authState.value = AuthState.Unauthenticated
@@ -133,6 +197,12 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun updateDisplayNameError() {
         updateState()
         _displayNameError.value = ""
+    }
+
+    fun updateOtpError() {
+        updateState()
+        _otpError.value = ""
+        _otpInfo.value = ""
     }
 
     private fun updateState() {

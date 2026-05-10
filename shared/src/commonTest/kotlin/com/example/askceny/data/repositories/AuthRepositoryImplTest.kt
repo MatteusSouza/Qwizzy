@@ -26,7 +26,7 @@ class AuthRepositoryImplTest {
             password = "correct-horse-battery-staple"
         )
 
-        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals(AuthState.EmailConfirmationRequired("ada@example.com"), result)
         assertEquals(
             EmailSignUpRequest(
                 displayName = "Ada Lovelace",
@@ -66,7 +66,7 @@ class AuthRepositoryImplTest {
             password = "correct-horse-battery-staple"
         )
 
-        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals(AuthState.EmailConfirmationRequired("ada@example.com"), result)
         assertEquals("ada@example.com", remoteDataSource.emailSignUpRequest?.email)
     }
 
@@ -266,7 +266,7 @@ class AuthRepositoryImplTest {
 
         val result = repository.resendSignUpEmailOtp(email = "ada@example.com")
 
-        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals(AuthState.EmailConfirmationRequired("ada@example.com"), result)
         assertEquals("ada@example.com", remoteDataSource.resendSignUpEmailOtpRequest)
     }
 

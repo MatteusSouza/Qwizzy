@@ -37,6 +37,7 @@ import com.example.askceny.presentation.composables.QuizDetailScreen
 import com.example.askceny.presentation.composables.QuizzesListScreen
 import com.example.askceny.presentation.composables.SignInScreen
 import com.example.askceny.presentation.composables.SignUpScreen
+import com.example.askceny.presentation.composables.VerifyEmailScreen
 import com.example.askceny.presentation.theme.AskCenyTheme
 import com.example.askceny.presentation.viewmodels.AuthViewModel
 import com.example.askceny.presentation.viewmodels.QuizViewModel
@@ -87,6 +88,7 @@ fun MainScreen(
     println("MAIN_SCREEN_VERIFY_AUTHENTICATION:  ${ authState is AuthState.Authenticated }")
 
     var isAppOnStart: Boolean by rememberSaveable { mutableStateOf(true) }
+    var pendingVerificationEmail: String by rememberSaveable { mutableStateOf("") }
     val startDestination: String = if (authState is AuthState.Authenticated) "QuizzesList" else "SignIn"
 
     if (isAppOnStart) {
@@ -105,6 +107,10 @@ fun MainScreen(
 
                 "SignUp" -> {
                     println("NAVIGATION_ROUTE: Sign Up ")
+                }
+
+                "VerifyEmail" -> {
+                    println("NAVIGATION_ROUTE: Verify Email ")
                 }
 
                 "QuizzesList" -> {
@@ -157,6 +163,8 @@ fun MainScreen(
             startDestination = startDestination,
             authViewModel = authViewModel,
             quizViewmodel = quizViewmodel,
+            pendingVerificationEmail = pendingVerificationEmail,
+            onPendingVerificationEmailChange = { pendingVerificationEmail = it },
         )
     }
 }
@@ -168,6 +176,8 @@ fun MyNavHost(
     startDestination: String,
     authViewModel: AuthViewModel,
     quizViewmodel: QuizViewModel,
+    pendingVerificationEmail: String,
+    onPendingVerificationEmailChange: (String) -> Unit,
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable("SignIn") {
@@ -193,6 +203,29 @@ fun MyNavHost(
                 },
                 signInOnClick = {
                     navController.popBackStack()
+                },
+                onEmailConfirmationRequired = { email ->
+                    onPendingVerificationEmailChange(email)
+                    navController.navigate("VerifyEmail") {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable("VerifyEmail") {
+            VerifyEmailScreen(
+                modifier = Modifier.padding(innerPadding),
+                email = pendingVerificationEmail,
+                viewModel = authViewModel,
+                onVerified = {
+                    navController.navigate("QuizzesList") {
+                        popUpTo("SignIn") { inclusive = true }
+                    }
+                },
+                onBackToSignIn = {
+                    navController.navigate("SignIn") {
+                        popUpTo("SignIn") { inclusive = true }
+                    }
                 },
             )
         }

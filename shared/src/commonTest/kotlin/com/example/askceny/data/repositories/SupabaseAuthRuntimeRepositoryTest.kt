@@ -64,7 +64,7 @@ class SupabaseAuthRuntimeRepositoryTest {
             password = "correct-horse-battery-staple"
         )
 
-        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals(AuthState.EmailConfirmationRequired("ada@example.com"), result)
         assertEquals(
             EmailSignUpRequest(
                 displayName = "Ada Lovelace",
@@ -231,7 +231,7 @@ class SupabaseAuthRuntimeRepositoryTest {
 
         val result = repository.resendSignUpEmailOtp(email = "ada@example.com")
 
-        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals(AuthState.EmailConfirmationRequired("ada@example.com"), result)
         assertEquals("ada@example.com", client.resendSignUpEmailOtpRequest)
     }
 

@@ -33,3 +33,14 @@ data class SignUpUiState(
             email.isNotEmpty() &&
             password.isNotEmpty()
 }
+
+data class VerifyEmailUiState(
+    val email: String = "",
+    val code: String = "",
+    val otpError: String = "",
+    val otpInfo: String = "",
+    val isLoading: Boolean = false,
+) {
+    val canVerify: Boolean
+        get() = code.isNotBlank() && !isLoading
+}

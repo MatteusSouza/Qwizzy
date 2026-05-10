@@ -4,6 +4,8 @@ import com.example.askceny.data.remote.SupabaseConfigHolder
 import com.example.askceny.domain.types.ErrorCode
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.OtpType
+import io.github.jan.supabase.auth.OtpVerifyResult
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
@@ -70,6 +72,14 @@ private object UnavailableSupabaseAuthSessionClient : SupabaseAuthSessionClient 
     override suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
         throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
     }
+
+    override suspend fun verifyEmailOtp(email: String, token: String): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
+
+    override suspend fun resendSignUpEmailOtp(email: String): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
 }
 
 internal class SupabaseKtAuthSessionClient(
@@ -127,6 +137,24 @@ internal class SupabaseKtAuthSessionClient(
 
     override suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
         return signInWithGoogleIdToken(idToken, nonce)
+    }
+
+    override suspend fun verifyEmailOtp(email: String, token: String): SupabaseAuthSuccess {
+        return mapAuthFailure {
+            when (client.auth.verifyEmailOtp(type = OtpType.Email.EMAIL, email = email, token = token)) {
+                is OtpVerifyResult.Authenticated -> {
+                    SupabaseAuthSuccess.Authenticated(client.auth.currentUserOrNull()?.toSupabaseAuthUser())
+                }
+                OtpVerifyResult.VerifiedNoSession -> SupabaseAuthSuccess.VerifiedNoSession
+            }
+        }
+    }
+
+    override suspend fun resendSignUpEmailOtp(email: String): SupabaseAuthSuccess {
+        return mapAuthFailure {
+            client.auth.resendEmail(type = OtpType.Email.SIGNUP, email = email)
+            SupabaseAuthSuccess.EmailConfirmationRequired()
+        }
     }
 
     private suspend fun signInWithGoogleIdToken(idToken: String, nonce: String?): SupabaseAuthSuccess {

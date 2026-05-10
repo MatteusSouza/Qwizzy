@@ -14,6 +14,8 @@ interface AuthRepository {
     suspend fun signInWithEmail(email: String, password: String): AuthState
     suspend fun signUpWithGoogle(idToken: String, nonce: String? = null): AuthState
     suspend fun signInWithGoogle(idToken: String, nonce: String? = null): AuthState
+    suspend fun verifyEmailOtp(email: String, token: String): AuthState
+    suspend fun resendSignUpEmailOtp(email: String): AuthState
     fun getCurrentUser() : User?
     fun signOut()
 }

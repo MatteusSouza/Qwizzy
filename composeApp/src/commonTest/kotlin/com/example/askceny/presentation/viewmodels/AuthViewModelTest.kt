@@ -202,6 +202,14 @@ class AuthViewModelTest {
             return AuthState.Unauthenticated
         }
 
+        override suspend fun verifyEmailOtp(email: String, token: String): AuthState {
+            return AuthState.Unauthenticated
+        }
+
+        override suspend fun resendSignUpEmailOtp(email: String): AuthState {
+            return AuthState.Unauthenticated
+        }
+
         override fun getCurrentUser(): User? {
             error("Session lookup failed")
         }
@@ -233,6 +241,14 @@ class AuthViewModelTest {
         }
 
         override suspend fun signInWithGoogle(idToken: String, nonce: String?): AuthState {
+            return AuthState.Unauthenticated
+        }
+
+        override suspend fun verifyEmailOtp(email: String, token: String): AuthState {
+            return AuthState.Unauthenticated
+        }
+
+        override suspend fun resendSignUpEmailOtp(email: String): AuthState {
             return AuthState.Unauthenticated
         }
 

@@ -30,6 +30,14 @@ class AuthRepositoryImpl(
         return remoteDataSource.signInWithGoogle(idToken, nonce).toAuthState()
     }
 
+    override suspend fun verifyEmailOtp(email: String, token: String): AuthState {
+        return remoteDataSource.verifyEmailOtp(email, token).toAuthState()
+    }
+
+    override suspend fun resendSignUpEmailOtp(email: String): AuthState {
+        return remoteDataSource.resendSignUpEmailOtp(email).toAuthState()
+    }
+
     override fun getCurrentUser(): User? {
         return remoteDataSource.getCurrentUser()
     }

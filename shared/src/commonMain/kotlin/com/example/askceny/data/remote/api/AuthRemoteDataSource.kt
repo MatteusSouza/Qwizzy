@@ -9,6 +9,8 @@ interface AuthRemoteDataSource {
     suspend fun signInWithEmail(email: String, password: String): AuthRemoteResult
     suspend fun signUpWithGoogle(idToken: String, nonce: String? = null): AuthRemoteResult
     suspend fun signInWithGoogle(idToken: String, nonce: String? = null): AuthRemoteResult
+    suspend fun verifyEmailOtp(email: String, token: String): AuthRemoteResult
+    suspend fun resendSignUpEmailOtp(email: String): AuthRemoteResult
     fun getCurrentUser(): User?
     fun signOut()
 }
@@ -27,6 +29,8 @@ interface SupabaseAuthSessionClient {
     suspend fun signUpWithEmail(displayName: String, email: String, password: String): SupabaseAuthSuccess
     suspend fun signInWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess
     suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess
+    suspend fun verifyEmailOtp(email: String, token: String): SupabaseAuthSuccess
+    suspend fun resendSignUpEmailOtp(email: String): SupabaseAuthSuccess
 }
 
 data class SupabaseAuthUser(
@@ -61,11 +65,20 @@ object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
     override suspend fun signUpWithGoogle(idToken: String, nonce: String?): SupabaseAuthSuccess {
         throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
     }
+
+    override suspend fun verifyEmailOtp(email: String, token: String): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
+
+    override suspend fun resendSignUpEmailOtp(email: String): SupabaseAuthSuccess {
+        throw SupabaseAuthFailureException(ErrorCode.UNEXPECTED_FAILURE.supabaseCode)
+    }
 }
 
 sealed class SupabaseAuthSuccess {
     data class Authenticated(val user: SupabaseAuthUser? = null): SupabaseAuthSuccess()
     data class EmailConfirmationRequired(val user: SupabaseAuthUser? = null): SupabaseAuthSuccess()
+    object VerifiedNoSession: SupabaseAuthSuccess()
 }
 
 class SupabaseAuthFailureException(
@@ -100,6 +113,18 @@ class SupabaseAuthRemoteDataSource(
     override suspend fun signInWithGoogle(idToken: String, nonce: String?): AuthRemoteResult {
         return runAuthCall {
             sessionClient.signInWithGoogle(idToken, nonce)
+        }
+    }
+
+    override suspend fun verifyEmailOtp(email: String, token: String): AuthRemoteResult {
+        return runAuthCall {
+            sessionClient.verifyEmailOtp(email, token)
+        }
+    }
+
+    override suspend fun resendSignUpEmailOtp(email: String): AuthRemoteResult {
+        return runAuthCall {
+            sessionClient.resendSignUpEmailOtp(email)
         }
     }
 
@@ -145,6 +170,7 @@ class SupabaseAuthRemoteDataSource(
             is SupabaseAuthSuccess.EmailConfirmationRequired -> {
                 AuthRemoteResult.EmailConfirmationRequired(user?.toDomainUser())
             }
+            SupabaseAuthSuccess.VerifiedNoSession -> AuthRemoteResult.Failure(ErrorCode.SESSION_NOT_FOUND)
         }
     }
 }

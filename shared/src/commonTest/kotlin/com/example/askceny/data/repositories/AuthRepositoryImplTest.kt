@@ -204,6 +204,86 @@ class AuthRepositoryImplTest {
     }
 
     @Test
+    fun `email otp verification returns authenticated when Supabase creates a session`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            verifyEmailOtpResult = AuthRemoteResult.Authenticated(sampleUser)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.verifyEmailOtp(
+            email = "ada@example.com",
+            token = "123456"
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            EmailOtpRequest(
+                email = "ada@example.com",
+                token = "123456"
+            ),
+            remoteDataSource.verifyEmailOtpRequest
+        )
+    }
+
+    @Test
+    fun `email otp verification maps no session result to controlled auth error`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            verifyEmailOtpResult = AuthRemoteResult.Failure(ErrorCode.SESSION_NOT_FOUND)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.verifyEmailOtp(
+            email = "ada@example.com",
+            token = "123456"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.SESSION_NOT_FOUND, error.errorCode)
+    }
+
+    @Test
+    fun `email otp verification maps invalid or expired token failures to auth error`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            verifyEmailOtpResult = AuthRemoteResult.Failure(ErrorCode.VALIDATION_FAILED)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.verifyEmailOtp(
+            email = "ada@example.com",
+            token = "000000"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.VALIDATION_FAILED, error.errorCode)
+    }
+
+    @Test
+    fun `resend sign-up email otp keeps user in pending confirmation flow`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            resendSignUpEmailOtpResult = AuthRemoteResult.EmailConfirmationRequired(sampleUser)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.resendSignUpEmailOtp(email = "ada@example.com")
+
+        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals("ada@example.com", remoteDataSource.resendSignUpEmailOtpRequest)
+    }
+
+    @Test
+    fun `resend sign-up email otp maps Supabase failures to auth error`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            resendSignUpEmailOtpResult = AuthRemoteResult.Failure(ErrorCode.OVER_REQUEST_RATE_LIMIT)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.resendSignUpEmailOtp(email = "ada@example.com")
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.OVER_REQUEST_RATE_LIMIT, error.errorCode)
+    }
+
+    @Test
     fun `current user returns user when Supabase session is authenticated`() {
         val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = sampleUser)
         val repository = AuthRepositoryImpl(remoteDataSource)
@@ -271,11 +351,18 @@ class AuthRepositoryImplTest {
         val nonce: String?,
     )
 
+    private data class EmailOtpRequest(
+        val email: String,
+        val token: String,
+    )
+
     private class RecordingAuthRemoteDataSource(
         private val signUpWithEmailResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
         private val signInWithEmailResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
         private val signUpWithGoogleResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
         private val signInWithGoogleResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
+        private val verifyEmailOtpResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
+        private val resendSignUpEmailOtpResult: AuthRemoteResult = AuthRemoteResult.EmailConfirmationRequired(sampleUser),
         private val currentUser: User? = sampleUser,
     ) : AuthRemoteDataSource {
         var emailSignUpRequest: EmailSignUpRequest? = null
@@ -285,6 +372,10 @@ class AuthRepositoryImplTest {
         var googleSignUpRequest: GoogleAuthRequest? = null
             private set
         var googleSignInRequest: GoogleAuthRequest? = null
+            private set
+        var verifyEmailOtpRequest: EmailOtpRequest? = null
+            private set
+        var resendSignUpEmailOtpRequest: String? = null
             private set
         var signOutCalls = 0
             private set
@@ -307,6 +398,16 @@ class AuthRepositoryImplTest {
         override suspend fun signInWithGoogle(idToken: String, nonce: String?): AuthRemoteResult {
             googleSignInRequest = GoogleAuthRequest(idToken, nonce)
             return signInWithGoogleResult
+        }
+
+        override suspend fun verifyEmailOtp(email: String, token: String): AuthRemoteResult {
+            verifyEmailOtpRequest = EmailOtpRequest(email, token)
+            return verifyEmailOtpResult
+        }
+
+        override suspend fun resendSignUpEmailOtp(email: String): AuthRemoteResult {
+            resendSignUpEmailOtpRequest = email
+            return resendSignUpEmailOtpResult
         }
 
         override fun getCurrentUser(): User? = currentUser

@@ -168,6 +168,86 @@ class SupabaseAuthRuntimeRepositoryTest {
         )
     }
 
+    @Test
+    fun `runtime email otp verification passes email and token to Supabase`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            verifyEmailOtpResult = SupabaseAuthSuccess.Authenticated(sampleSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.verifyEmailOtp(
+            email = "ada@example.com",
+            token = "123456"
+        )
+
+        assertEquals(AuthState.Authenticated, result)
+        assertEquals(
+            EmailOtpRequest(
+                email = "ada@example.com",
+                token = "123456"
+            ),
+            client.verifyEmailOtpRequest
+        )
+    }
+
+    @Test
+    fun `runtime email otp verification maps verified no session to controlled auth error`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            verifyEmailOtpResult = SupabaseAuthSuccess.VerifiedNoSession
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.verifyEmailOtp(
+            email = "ada@example.com",
+            token = "123456"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.SESSION_NOT_FOUND, error.errorCode)
+    }
+
+    @Test
+    fun `runtime email otp verification maps invalid or expired token failure`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            verifyEmailOtpError = SupabaseAuthFailureException("validation_failed")
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.verifyEmailOtp(
+            email = "ada@example.com",
+            token = "000000"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.VALIDATION_FAILED, error.errorCode)
+    }
+
+    @Test
+    fun `runtime resend sign-up email otp passes email to Supabase`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            resendSignUpEmailOtpResult = SupabaseAuthSuccess.EmailConfirmationRequired()
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.resendSignUpEmailOtp(email = "ada@example.com")
+
+        assertEquals(AuthState.EmailConfirmationRequired, result)
+        assertEquals("ada@example.com", client.resendSignUpEmailOtpRequest)
+    }
+
+    @Test
+    fun `runtime resend sign-up email otp maps rate limit failure`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            resendSignUpEmailOtpError = SupabaseAuthFailureException("over_request_rate_limit")
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.resendSignUpEmailOtp(email = "ada@example.com")
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.OVER_REQUEST_RATE_LIMIT, error.errorCode)
+    }
+
     private data class EmailSignInRequest(
         val email: String,
         val password: String,
@@ -184,6 +264,11 @@ class SupabaseAuthRuntimeRepositoryTest {
         val nonce: String?,
     )
 
+    private data class EmailOtpRequest(
+        val email: String,
+        val token: String,
+    )
+
     private class ScriptedSupabaseAuthSessionClient(
         private val signInWithEmailResult: SupabaseAuthSuccess =
             SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
@@ -197,6 +282,12 @@ class SupabaseAuthRuntimeRepositoryTest {
         private val signUpWithGoogleResult: SupabaseAuthSuccess =
             SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
         private val signUpWithGoogleError: SupabaseAuthFailureException? = null,
+        private val verifyEmailOtpResult: SupabaseAuthSuccess =
+            SupabaseAuthSuccess.Authenticated(sampleSupabaseUser),
+        private val verifyEmailOtpError: SupabaseAuthFailureException? = null,
+        private val resendSignUpEmailOtpResult: SupabaseAuthSuccess =
+            SupabaseAuthSuccess.EmailConfirmationRequired(),
+        private val resendSignUpEmailOtpError: SupabaseAuthFailureException? = null,
     ) : SupabaseAuthSessionClient {
         override val isPlaceholder: Boolean = false
 
@@ -207,6 +298,10 @@ class SupabaseAuthRuntimeRepositoryTest {
         var googleSignInRequest: GoogleAuthRequest? = null
             private set
         var googleSignUpRequest: GoogleAuthRequest? = null
+            private set
+        var verifyEmailOtpRequest: EmailOtpRequest? = null
+            private set
+        var resendSignUpEmailOtpRequest: String? = null
             private set
 
         override fun currentUserOrNull(): SupabaseAuthUser? = null
@@ -239,6 +334,18 @@ class SupabaseAuthRuntimeRepositoryTest {
             googleSignUpRequest = GoogleAuthRequest(idToken, nonce)
             signUpWithGoogleError?.let { throw it }
             return signUpWithGoogleResult
+        }
+
+        override suspend fun verifyEmailOtp(email: String, token: String): SupabaseAuthSuccess {
+            verifyEmailOtpRequest = EmailOtpRequest(email, token)
+            verifyEmailOtpError?.let { throw it }
+            return verifyEmailOtpResult
+        }
+
+        override suspend fun resendSignUpEmailOtp(email: String): SupabaseAuthSuccess {
+            resendSignUpEmailOtpRequest = email
+            resendSignUpEmailOtpError?.let { throw it }
+            return resendSignUpEmailOtpResult
         }
     }
 

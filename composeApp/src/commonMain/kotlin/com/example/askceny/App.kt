@@ -38,15 +38,16 @@ import com.example.askceny.presentation.composables.QuizzesListScreen
 import com.example.askceny.presentation.composables.SignInScreen
 import com.example.askceny.presentation.composables.SignUpScreen
 import com.example.askceny.presentation.composables.VerifyEmailScreen
+import com.example.askceny.presentation.di.koinViewModel
 import com.example.askceny.presentation.theme.AskCenyTheme
 import com.example.askceny.presentation.viewmodels.AuthViewModel
 import com.example.askceny.presentation.viewmodels.QuizViewModel
 
 @Composable
-fun App(
-    authViewModel: AuthViewModel,
-    quizViewModel: QuizViewModel,
-) {
+fun App() {
+    val authViewModel: AuthViewModel = koinViewModel()
+    val quizViewModel: QuizViewModel = koinViewModel()
+
     AskCenyTheme {
         val focusManager = LocalFocusManager.current
 

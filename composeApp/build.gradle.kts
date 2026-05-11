@@ -36,8 +36,10 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.jetbrains.navigation.compose)
             implementation(libs.coil.compose)
+            implementation(libs.koin.core)
         }
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)

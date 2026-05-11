@@ -1,11 +1,7 @@
 package com.example.askceny.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.askceny.domain.repositories.AuthRepository
 import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
@@ -222,19 +218,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         if (authState.value is AuthState.AuthError) {
             println("AUTH_LOGIN_COLUMN_UPDATE: ´´ UPDATE CALLED")
             _authState.value = AuthState.Unauthenticated
-        }
-    }
-
-
-    companion object {
-        val USER_REPOSITORY_KEY = object : CreationExtras.Key<AuthRepository> {}
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val authRepository = this[USER_REPOSITORY_KEY] as AuthRepository
-                AuthViewModel(
-                    authRepository = authRepository
-                )
-            }
         }
     }
 }

@@ -5,6 +5,7 @@ import com.example.askceny.data.di.initKoin
 import com.example.askceny.data.local.setDatabaseBuilderContext
 import com.example.askceny.data.remote.SupabaseConfig
 import com.example.askceny.data.remote.SupabaseConfigHolder
+import com.example.askceny.presentation.di.presentationModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 
@@ -22,6 +23,7 @@ class AskCenyApplication : Application() {
         initKoin {
             androidLogger()
             androidContext(this@AskCenyApplication)
+            modules(presentationModule)
         }
     }
 }

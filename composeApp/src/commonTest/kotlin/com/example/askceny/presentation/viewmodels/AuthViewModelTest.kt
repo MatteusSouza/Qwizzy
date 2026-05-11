@@ -186,6 +186,28 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `email send rate limit auth failure maps to visible email error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signUpResult = AuthState.AuthError(ErrorCode.OVER_EMAIL_SEND_RATE_LIMIT)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signUp("User", "user@example.com", "password")
+            advanceUntilIdle()
+
+            assertEquals("Too many attempts. Try again later.", viewModel.emailError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun `sign-up exposes pending email confirmation state with normalized email`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
@@ -259,6 +281,28 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `expired email otp shows visible verification error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    verifyEmailOtpResult = AuthState.AuthError(ErrorCode.OTP_EXPIRED)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.verifyEmailOtp("user@example.com", "000000")
+            advanceUntilIdle()
+
+            assertEquals("Invalid or expired verification code", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun `blank email otp does not call repository`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
@@ -312,6 +356,28 @@ class AuthViewModelTest {
             val viewModel = AuthViewModel(
                 RecordingAuthRepository(
                     resendSignUpEmailOtpResult = AuthState.AuthError(ErrorCode.OVER_REQUEST_RATE_LIMIT)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.resendSignUpEmailOtp("user@example.com")
+            advanceUntilIdle()
+
+            assertEquals("Too many attempts. Try again later.", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `resend sign-up email otp maps email send rate limit to visible verification error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    resendSignUpEmailOtpResult = AuthState.AuthError(ErrorCode.OVER_EMAIL_SEND_RATE_LIMIT)
                 )
             )
             advanceUntilIdle()

@@ -160,7 +160,7 @@ class SupabaseAuthRemoteDataSource(
         } catch (e: SupabaseAuthFailureException) {
             AuthRemoteResult.Failure(ErrorCode.fromSupabaseCode(e.supabaseCode))
         } catch (e: Exception) {
-            AuthRemoteResult.Failure(ErrorCode.UNEXPECTED_FAILURE)
+            AuthRemoteResult.Failure(ErrorCode.fromSupabaseCode(e.message))
         }
     }
 

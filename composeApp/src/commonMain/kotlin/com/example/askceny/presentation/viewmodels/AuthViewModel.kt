@@ -147,6 +147,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             ErrorCode.EMAIL_EXISTS,
             ErrorCode.USER_ALREADY_EXISTS -> { _emailError.value = "Email already in use" }
             ErrorCode.WEAK_PASSWORD -> { _passwordError.value = "Weak password" }
+            ErrorCode.OVER_REQUEST_RATE_LIMIT,
+            ErrorCode.OVER_EMAIL_SEND_RATE_LIMIT -> { _emailError.value = "Too many attempts. Try again later." }
+            ErrorCode.REQUEST_TIMEOUT -> { _emailError.value = "Request timed out. Try again." }
             ErrorCode.UNEXPECTED_FAILURE -> { _emailError.value = "Something went wrong. Try again." }
             else -> { Unit }
         }
@@ -159,9 +162,11 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                     ErrorCode.INVALID_CREDENTIALS,
                     ErrorCode.VALIDATION_FAILED,
                     ErrorCode.EMAIL_NOT_CONFIRMED,
+                    ErrorCode.OTP_EXPIRED,
                     ErrorCode.SESSION_EXPIRED,
                     ErrorCode.SESSION_NOT_FOUND -> "Invalid or expired verification code"
-                    ErrorCode.OVER_REQUEST_RATE_LIMIT -> "Too many attempts. Try again later."
+                    ErrorCode.OVER_REQUEST_RATE_LIMIT,
+                    ErrorCode.OVER_EMAIL_SEND_RATE_LIMIT -> "Too many attempts. Try again later."
                     ErrorCode.REQUEST_TIMEOUT -> "Request timed out. Try again."
                     else -> "Something went wrong. Try again."
                 }

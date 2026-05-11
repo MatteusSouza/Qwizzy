@@ -11,7 +11,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.askceny.presentation.preview.SampleUiState
 import com.example.askceny.presentation.state.SignInUiState
@@ -24,6 +23,8 @@ fun SignInContent(
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onSignUpClick: () -> Unit,
+    passwordVisible: Boolean,
+    onPasswordVisibilityChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -45,12 +46,11 @@ fun SignInContent(
                 }
             },
         )
-        OutlinedTextField(
+        PasswordTextField(
             value = state.password,
             onValueChange = onPasswordChange,
-            visualTransformation = PasswordVisualTransformation(),
-            label = { Text("Password") },
-            placeholder = { Text("Password") },
+            passwordVisible = passwordVisible,
+            onPasswordVisibilityChange = onPasswordVisibilityChange,
             isError = state.passwordError.isNotEmpty(),
             supportingText = {
                 if (state.passwordError.isNotEmpty()) {
@@ -80,5 +80,7 @@ fun SignInContentPreview() {
         onPasswordChange = {},
         onSubmit = {},
         onSignUpClick = {},
+        passwordVisible = false,
+        onPasswordVisibilityChange = {},
     )
 }

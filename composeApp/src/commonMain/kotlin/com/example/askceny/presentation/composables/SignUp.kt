@@ -28,6 +28,7 @@ fun SignUpScreen(
     val invalidDisplayName by viewModel.displayNameError.collectAsState()
     val invalidPassword by viewModel.passwordError.collectAsState()
     var hasSubmittedSignUp by rememberSaveable { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(authState) {
         when (val state = authState) {
@@ -80,6 +81,8 @@ fun SignUpScreen(
             viewModel.signUp(displayName, email, password)
         },
         onSignInClick = signInOnClick,
+        passwordVisible = passwordVisible,
+        onPasswordVisibilityChange = { passwordVisible = it },
     )
 
     if (authState is AuthState.AuthError) {

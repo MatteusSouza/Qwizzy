@@ -24,6 +24,7 @@ fun SignInScreen(
     var password by rememberSaveable { mutableStateOf("") }
     val emailError by viewModel.emailError.collectAsState()
     val passwordError by viewModel.passwordError.collectAsState()
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Authenticated) {
@@ -55,6 +56,8 @@ fun SignInScreen(
         },
         onSubmit = { viewModel.signIn(email, password) },
         onSignUpClick = signUpOnClick,
+        passwordVisible = passwordVisible,
+        onPasswordVisibilityChange = { passwordVisible = it },
     )
 
     if (authState is AuthState.AuthError) {

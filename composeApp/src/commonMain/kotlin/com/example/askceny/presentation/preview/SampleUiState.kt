@@ -6,6 +6,7 @@ import com.example.askceny.presentation.state.QuizUiModel
 import com.example.askceny.presentation.state.QuizzesListUiState
 import com.example.askceny.presentation.state.SignInUiState
 import com.example.askceny.presentation.state.SignUpUiState
+import com.example.askceny.presentation.state.VerifyEmailUiState
 
 object SampleUiState {
     val signIn = SignInUiState(
@@ -24,6 +25,11 @@ object SampleUiState {
         displayName = "Ceny User",
         email = "user@example.com",
         password = "password123",
+    )
+
+    val verifyEmail = VerifyEmailUiState(
+        email = "user@example.com",
+        code = "123456",
     )
 
     val sampleQuizzes = listOf(

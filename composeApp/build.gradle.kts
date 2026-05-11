@@ -47,6 +47,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
@@ -63,6 +64,16 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val supabaseUrl = providers.gradleProperty("SUPABASE_URL")
+            .orElse(providers.environmentVariable("SUPABASE_URL"))
+            .getOrElse("")
+        val supabasePublishableKey = providers.gradleProperty("SUPABASE_PUBLISHABLE_KEY")
+            .orElse(providers.environmentVariable("SUPABASE_PUBLISHABLE_KEY"))
+            .getOrElse("")
+
+        resValue("string", "supabase_url", supabaseUrl)
+        resValue("string", "supabase_publishable_key", supabasePublishableKey)
     }
 
     sourceSets["main"].apply {
@@ -82,11 +93,21 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
 }
 
 dependencies {
+    constraints {
+        implementation(libs.androidx.browser) {
+            version {
+                strictly(libs.versions.androidxBrowser.get())
+            }
+        }
+    }
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     debugImplementation(libs.compose.ui.tooling)
 }

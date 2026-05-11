@@ -24,6 +24,12 @@ kotlin {
             implementation(libs.sqlite.bundled)
             implementation(libs.koin.core)
             implementation(libs.ktor.client.core)
+            implementation(libs.supabase.kt)
+            implementation(libs.supabase.auth)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
@@ -55,6 +61,10 @@ android {
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
+
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
 }
 
 room {
@@ -62,6 +72,7 @@ room {
 }
 
 dependencies {
+    add("coreLibraryDesugaring", libs.desugar.jdk.libs)
     add("kspCommonMainMetadata", libs.androidx.room.compiler)
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosX64", libs.androidx.room.compiler)

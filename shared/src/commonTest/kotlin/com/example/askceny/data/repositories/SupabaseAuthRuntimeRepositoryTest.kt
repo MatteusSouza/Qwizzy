@@ -109,6 +109,40 @@ class SupabaseAuthRuntimeRepositoryTest {
     }
 
     @Test
+    fun `runtime email sign-up maps Supabase repeated signup obfuscated user to auth error`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signUpWithEmailResult = SupabaseAuthSuccess.EmailConfirmationRequired(obfuscatedSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signUpWithEmail(
+            displayName = "Ada Lovelace",
+            email = "ada@example.com",
+            password = "correct-horse-battery-staple"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.USER_ALREADY_EXISTS, error.errorCode)
+    }
+
+    @Test
+    fun `runtime email sign-up maps Supabase repeated signup empty identities user to auth error`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            signUpWithEmailResult = SupabaseAuthSuccess.EmailConfirmationRequired(repeatedSignUpSupabaseUser)
+        )
+        val repository = AuthRepositoryImpl(SupabaseAuthRemoteDataSource(client))
+
+        val result = repository.signUpWithEmail(
+            displayName = "Ada Lovelace",
+            email = "ada@example.com",
+            password = "correct-horse-battery-staple"
+        )
+
+        val error = assertIs<AuthState.AuthError>(result)
+        assertEquals(ErrorCode.USER_ALREADY_EXISTS, error.errorCode)
+    }
+
+    @Test
     fun `runtime google sign-in passes ID token and nonce to Supabase`() = runTest {
         val client = ScriptedSupabaseAuthSessionClient(
             signInWithGoogleResult = SupabaseAuthSuccess.Authenticated(sampleSupabaseUser)
@@ -401,6 +435,21 @@ class SupabaseAuthRuntimeRepositoryTest {
             email = "ada@example.com",
             displayName = "Ada Lovelace",
             username = "adalovelace",
+            identityCount = 1,
+        )
+        val obfuscatedSupabaseUser = SupabaseAuthUser(
+            id = "obfuscated-user-id",
+            email = "",
+            displayName = null,
+            username = null,
+            identityCount = 0,
+        )
+        val repeatedSignUpSupabaseUser = SupabaseAuthUser(
+            id = "repeated-signup-user-id",
+            email = "ada@example.com",
+            displayName = null,
+            username = null,
+            identityCount = 0,
         )
     }
 }

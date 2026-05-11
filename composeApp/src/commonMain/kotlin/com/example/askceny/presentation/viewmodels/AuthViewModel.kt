@@ -128,6 +128,14 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun dismissEmailConfirmationRequired() {
+        if (_authState.value is AuthState.EmailConfirmationRequired) {
+            _authState.value = AuthState.Unauthenticated
+        }
+        _otpError.value = ""
+        _otpInfo.value = ""
+    }
+
     private fun applyValidationResult(validation: AuthValidationResult) {
         _displayNameError.value = validation.displayNameError
         _emailError.value = validation.emailError

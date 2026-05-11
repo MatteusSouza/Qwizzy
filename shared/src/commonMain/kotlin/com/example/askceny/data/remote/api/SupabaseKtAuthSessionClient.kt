@@ -191,6 +191,7 @@ internal class SupabaseKtAuthSessionClient(
                 ?: userMetadata.stringValue("display_name")
                 ?: userMetadata.stringValue("name"),
             username = userMetadata.stringValue("username"),
+            identityCount = identities?.size,
         )
     }
 

@@ -208,6 +208,29 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `existing email sign-up auth failure maps to visible email error`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    signUpResult = AuthState.AuthError(ErrorCode.USER_ALREADY_EXISTS)
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.signUp("User", "user@example.com", "password")
+            advanceUntilIdle()
+
+            assertEquals("Email already in use", viewModel.emailError.value)
+            assertEquals(AuthState.AuthError(ErrorCode.USER_ALREADY_EXISTS), viewModel.authState.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun `sign-up exposes pending email confirmation state with normalized email`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
@@ -342,6 +365,31 @@ class AuthViewModelTest {
             assertEquals(AuthState.EmailConfirmationRequired("user@example.com"), viewModel.authState.value)
             assertEquals("Verification code resent", viewModel.otpInfo.value)
             assertEquals("", viewModel.otpError.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `dismiss email confirmation required clears pending auth state and otp messages`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    resendSignUpEmailOtpResult = AuthState.EmailConfirmationRequired("user@example.com")
+                )
+            )
+            advanceUntilIdle()
+
+            viewModel.resendSignUpEmailOtp("user@example.com")
+            advanceUntilIdle()
+            viewModel.dismissEmailConfirmationRequired()
+
+            assertEquals(AuthState.Unauthenticated, viewModel.authState.value)
+            assertEquals("", viewModel.otpError.value)
+            assertEquals("", viewModel.otpInfo.value)
         } finally {
             Dispatchers.resetMain()
         }

@@ -189,7 +189,11 @@ fun MyNavHost(
                         popUpTo("SignIn") { inclusive = true }
                     }
                 },
-                signUpOnClick = { navController.navigate("SignUp") },
+                signUpOnClick = {
+                    authViewModel.dismissEmailConfirmationRequired()
+                    onPendingVerificationEmailChange("")
+                    navController.navigate("SignUp")
+                },
             )
         }
         composable("SignUp") {
@@ -202,6 +206,8 @@ fun MyNavHost(
                     }
                 },
                 signInOnClick = {
+                    authViewModel.dismissEmailConfirmationRequired()
+                    onPendingVerificationEmailChange("")
                     navController.popBackStack()
                 },
                 onEmailConfirmationRequired = { email ->
@@ -223,6 +229,8 @@ fun MyNavHost(
                     }
                 },
                 onBackToSignIn = {
+                    authViewModel.dismissEmailConfirmationRequired()
+                    onPendingVerificationEmailChange("")
                     navController.navigate("SignIn") {
                         popUpTo("SignIn") { inclusive = true }
                     }

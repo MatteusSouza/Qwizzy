@@ -38,6 +38,7 @@ data class SupabaseAuthUser(
     val email: String?,
     val displayName: String? = null,
     val username: String? = null,
+    val identityCount: Int? = null,
 )
 
 object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
@@ -93,8 +94,14 @@ class SupabaseAuthRemoteDataSource(
         get() = sessionClient.isPlaceholder
 
     override suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthRemoteResult {
-        return runAuthCall {
-            sessionClient.signUpWithEmail(displayName, email, password)
+        return try {
+            sessionClient.signUpWithEmail(displayName, email, password).toSignUpRemoteResult(email)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: SupabaseAuthFailureException) {
+            AuthRemoteResult.Failure(ErrorCode.fromSupabaseCode(e.supabaseCode))
+        } catch (e: Exception) {
+            AuthRemoteResult.Failure(ErrorCode.fromSupabaseCode(e.message))
         }
     }
 
@@ -172,5 +179,22 @@ class SupabaseAuthRemoteDataSource(
             }
             SupabaseAuthSuccess.VerifiedNoSession -> AuthRemoteResult.Failure(ErrorCode.SESSION_NOT_FOUND)
         }
+    }
+
+    private fun SupabaseAuthSuccess.toSignUpRemoteResult(requestedEmail: String): AuthRemoteResult {
+        if (this is SupabaseAuthSuccess.EmailConfirmationRequired && user.isObfuscatedRepeatedSignUp(requestedEmail)) {
+            return AuthRemoteResult.Failure(ErrorCode.USER_ALREADY_EXISTS)
+        }
+
+        return toRemoteResult()
+    }
+
+    private fun SupabaseAuthUser?.isObfuscatedRepeatedSignUp(requestedEmail: String): Boolean {
+        val normalizedReturnedEmail = this?.email?.trim().orEmpty()
+        val normalizedRequestedEmail = requestedEmail.trim()
+
+        return normalizedReturnedEmail.isEmpty() ||
+            !normalizedReturnedEmail.equals(normalizedRequestedEmail, ignoreCase = true) ||
+            this?.identityCount == 0
     }
 }

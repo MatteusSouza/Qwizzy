@@ -27,11 +27,26 @@ fun SignUpScreen(
     val invalidEmail by viewModel.emailError.collectAsState()
     val invalidDisplayName by viewModel.displayNameError.collectAsState()
     val invalidPassword by viewModel.passwordError.collectAsState()
+    var hasSubmittedSignUp by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(authState) {
         when (val state = authState) {
-            is AuthState.Authenticated -> signUpOnClick()
-            is AuthState.EmailConfirmationRequired -> onEmailConfirmationRequired(state.email)
+            is AuthState.Authenticated -> {
+                if (hasSubmittedSignUp) {
+                    hasSubmittedSignUp = false
+                    signUpOnClick()
+                }
+            }
+            is AuthState.EmailConfirmationRequired -> {
+                if (hasSubmittedSignUp) {
+                    hasSubmittedSignUp = false
+                    onEmailConfirmationRequired(state.email)
+                }
+            }
+            is AuthState.AuthError,
+            AuthState.Unauthenticated -> {
+                hasSubmittedSignUp = false
+            }
             else -> Unit
         }
     }
@@ -60,7 +75,10 @@ fun SignUpScreen(
             password = it
             viewModel.updatePasswordError()
         },
-        onSubmit = { viewModel.signUp(displayName, email, password) },
+        onSubmit = {
+            hasSubmittedSignUp = true
+            viewModel.signUp(displayName, email, password)
+        },
         onSignInClick = signInOnClick,
     )
 

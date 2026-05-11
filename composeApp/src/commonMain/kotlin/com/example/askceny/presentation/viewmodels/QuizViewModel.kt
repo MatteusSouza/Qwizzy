@@ -1,11 +1,7 @@
 package com.example.askceny.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.askceny.domain.models.Quiz
 import com.example.askceny.domain.repositories.QuizRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,18 +69,6 @@ class QuizViewModel(private val quizRepository: QuizRepository) : ViewModel() {
         viewModelScope.launch {
             println("QuizViewModel: Update called")
             _quizzesState.value = quizRepository.getAllQuizzes().toMutableList()
-        }
-    }
-
-    companion object {
-        val QUIZ_REPOSITORY_KEY = object : CreationExtras.Key<QuizRepository> {}
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val quizRepository = this[QUIZ_REPOSITORY_KEY] as QuizRepository
-                QuizViewModel(
-                    quizRepository = quizRepository
-                )
-            }
         }
     }
 }

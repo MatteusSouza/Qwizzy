@@ -11,6 +11,7 @@ import com.example.askceny.presentation.viewmodels.AuthViewModel
 import com.example.askceny.presentation.viewmodels.QuizViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -77,6 +78,8 @@ class PresentationModuleTest {
         override suspend fun resendSignUpEmailOtp(email: String): AuthState {
             return AuthState.EmailConfirmationRequired(email)
         }
+
+        override fun observeAuthState() = flowOf(AuthState.Unauthenticated)
 
         override fun getCurrentUser(): User? = null
 

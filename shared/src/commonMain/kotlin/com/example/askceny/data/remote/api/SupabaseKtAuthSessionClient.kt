@@ -12,10 +12,14 @@ import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.createSupabaseClient
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -50,6 +54,9 @@ private object UnavailableSupabaseAuthSessionClient : SupabaseAuthSessionClient 
     override val isPlaceholder: Boolean = false
 
     override fun currentUserOrNull(): SupabaseAuthUser? = null
+
+    override fun observeSessionStatus(): Flow<SupabaseAuthSessionStatus> =
+        flowOf(SupabaseAuthSessionStatus.Unauthenticated)
 
     override fun signOut() {}
 
@@ -89,6 +96,19 @@ internal class SupabaseKtAuthSessionClient(
 
     override fun currentUserOrNull(): SupabaseAuthUser? {
         return client.auth.currentUserOrNull()?.toSupabaseAuthUser()
+    }
+
+    override fun observeSessionStatus(): Flow<SupabaseAuthSessionStatus> {
+        return client.auth.sessionStatus.map { status ->
+            when (status) {
+                is SessionStatus.Authenticated -> {
+                    SupabaseAuthSessionStatus.Authenticated(status.session.user?.toSupabaseAuthUser())
+                }
+                is SessionStatus.NotAuthenticated -> SupabaseAuthSessionStatus.Unauthenticated
+                is SessionStatus.RefreshFailure -> SupabaseAuthSessionStatus.NetworkError
+                else -> SupabaseAuthSessionStatus.Loading
+            }
+        }
     }
 
     override fun signOut() {

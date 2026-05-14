@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,10 +91,58 @@ fun MainScreen(
 
     var isAppOnStart: Boolean by rememberSaveable { mutableStateOf(true) }
     var pendingVerificationEmail: String by rememberSaveable { mutableStateOf("") }
-    val startDestination: String = if (authState is AuthState.Authenticated) "QuizzesList" else "SignIn"
+    val startDestination: String = when (authState) {
+        AuthState.Authenticated -> "QuizzesList"
+        AuthState.Loading -> "AuthLoading"
+        else -> "SignIn"
+    }
 
     if (isAppOnStart) {
         isAppOnStart = false
+    }
+
+    LaunchedEffect(authState, currentRoute) {
+        when (authState) {
+            AuthState.Authenticated -> {
+                if (currentRoute == "AuthLoading") {
+                    navController.navigateAndClearBackStack(
+                        route = "QuizzesList",
+                        popUpToRoute = "AuthLoading",
+                    )
+                }
+            }
+            AuthState.Unauthenticated -> {
+                when (currentRoute) {
+                    "AuthLoading" -> {
+                        navController.navigateAndClearBackStack(
+                            route = "SignIn",
+                            popUpToRoute = "AuthLoading",
+                        )
+                    }
+                    "QuizzesList",
+                    "QuizDetail",
+                    "EditQuiz",
+                    "EditQuestion",
+                    "PlayQuiz",
+                    "Result",
+                    "Search" -> {
+                        navController.navigateAndClearBackStack(
+                            route = "SignIn",
+                            popUpToRoute = "QuizzesList",
+                        )
+                    }
+                }
+            }
+            is AuthState.AuthError -> {
+                if (currentRoute == "AuthLoading") {
+                    navController.navigateAndClearBackStack(
+                        route = "SignIn",
+                        popUpToRoute = "AuthLoading",
+                    )
+                }
+            }
+            else -> Unit
+        }
     }
 
     Column(modifier = Modifier.padding(innerPadding)) {
@@ -181,6 +230,7 @@ fun MyNavHost(
     onPendingVerificationEmailChange: (String) -> Unit,
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable("AuthLoading") {}
         composable("SignIn") {
             SignInScreen(
                 modifier = Modifier.padding(innerPadding),
@@ -264,5 +314,15 @@ fun MyNavHost(
                 Text("Search Test", fontSize = 32.sp)
             }
         }
+    }
+}
+
+private fun NavHostController.navigateAndClearBackStack(
+    route: String,
+    popUpToRoute: String,
+) {
+    navigate(route) {
+        popUpTo(popUpToRoute) { inclusive = true }
+        launchSingleTop = true
     }
 }

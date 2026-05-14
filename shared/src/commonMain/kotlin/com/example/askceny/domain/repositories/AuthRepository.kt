@@ -2,6 +2,7 @@ package com.example.askceny.domain.repositories
 
 import com.example.askceny.domain.models.User
 import com.example.askceny.domain.types.AuthState
+import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     suspend fun createUserWithEmailAndPassword(displayName: String, email: String, password: String): AuthState =
@@ -16,6 +17,7 @@ interface AuthRepository {
     suspend fun signInWithGoogle(idToken: String, nonce: String? = null): AuthState
     suspend fun verifyEmailOtp(email: String, token: String): AuthState
     suspend fun resendSignUpEmailOtp(email: String): AuthState
+    fun observeAuthState(): Flow<AuthState>
     fun getCurrentUser() : User?
     fun signOut()
 }

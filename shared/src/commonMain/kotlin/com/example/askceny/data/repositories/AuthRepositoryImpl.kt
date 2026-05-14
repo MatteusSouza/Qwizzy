@@ -6,6 +6,7 @@ import com.example.askceny.data.remote.api.SupabaseAuthRemoteDataSource
 import com.example.askceny.domain.models.User
 import com.example.askceny.domain.repositories.AuthRepository
 import com.example.askceny.domain.types.AuthState
+import kotlinx.coroutines.flow.Flow
 
 class AuthRepositoryImpl(
     private val remoteDataSource: AuthRemoteDataSource = SupabaseAuthRemoteDataSource(),
@@ -36,6 +37,10 @@ class AuthRepositoryImpl(
 
     override suspend fun resendSignUpEmailOtp(email: String): AuthState {
         return remoteDataSource.resendSignUpEmailOtp(email).toAuthState(email)
+    }
+
+    override fun observeAuthState(): Flow<AuthState> {
+        return remoteDataSource.observeAuthState()
     }
 
     override fun getCurrentUser(): User? {

@@ -3,10 +3,13 @@ package com.example.askceny.data.repositories
 import com.example.askceny.data.remote.api.SupabaseAuthFailureException
 import com.example.askceny.data.remote.api.SupabaseAuthRemoteDataSource
 import com.example.askceny.data.remote.api.SupabaseAuthSessionClient
+import com.example.askceny.data.remote.api.SupabaseAuthSessionStatus
 import com.example.askceny.data.remote.api.SupabaseAuthSuccess
 import com.example.askceny.data.remote.api.SupabaseAuthUser
 import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,6 +52,31 @@ class SupabaseAuthRuntimeRepositoryTest {
 
         val error = assertIs<AuthState.AuthError>(result)
         assertEquals(ErrorCode.INVALID_CREDENTIALS, error.errorCode)
+    }
+
+    @Test
+    fun `runtime auth state observation maps Supabase session statuses`() = runTest {
+        val client = ScriptedSupabaseAuthSessionClient(
+            sessionStatuses = listOf(
+                SupabaseAuthSessionStatus.Loading,
+                SupabaseAuthSessionStatus.Authenticated(sampleSupabaseUser),
+                SupabaseAuthSessionStatus.Unauthenticated,
+                SupabaseAuthSessionStatus.NetworkError,
+            )
+        )
+        val remoteDataSource = SupabaseAuthRemoteDataSource(client)
+
+        val result = remoteDataSource.observeAuthState().toList()
+
+        assertEquals(
+            listOf(
+                AuthState.Loading,
+                AuthState.Authenticated,
+                AuthState.Unauthenticated,
+                AuthState.AuthError(ErrorCode.NETWORK_ERROR),
+            ),
+            result,
+        )
     }
 
     @Test
@@ -368,6 +396,8 @@ class SupabaseAuthRuntimeRepositoryTest {
         private val resendSignUpEmailOtpResult: SupabaseAuthSuccess =
             SupabaseAuthSuccess.EmailConfirmationRequired(),
         private val resendSignUpEmailOtpError: Exception? = null,
+        private val sessionStatuses: List<SupabaseAuthSessionStatus> =
+            listOf(SupabaseAuthSessionStatus.Unauthenticated),
     ) : SupabaseAuthSessionClient {
         override val isPlaceholder: Boolean = false
 
@@ -385,6 +415,8 @@ class SupabaseAuthRuntimeRepositoryTest {
             private set
 
         override fun currentUserOrNull(): SupabaseAuthUser? = null
+
+        override fun observeSessionStatus() = flowOf(*sessionStatuses.toTypedArray())
 
         override fun signOut() {}
 

@@ -1,8 +1,13 @@
 package com.example.askceny.data.remote.api
 
 import com.example.askceny.domain.models.User
+import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 interface AuthRemoteDataSource {
     suspend fun signUpWithEmail(displayName: String, email: String, password: String): AuthRemoteResult
@@ -11,6 +16,7 @@ interface AuthRemoteDataSource {
     suspend fun signInWithGoogle(idToken: String, nonce: String? = null): AuthRemoteResult
     suspend fun verifyEmailOtp(email: String, token: String): AuthRemoteResult
     suspend fun resendSignUpEmailOtp(email: String): AuthRemoteResult
+    fun observeAuthState(): Flow<AuthState>
     fun getCurrentUser(): User?
     fun signOut()
 }
@@ -24,6 +30,7 @@ sealed class AuthRemoteResult {
 interface SupabaseAuthSessionClient {
     val isPlaceholder: Boolean
     fun currentUserOrNull(): SupabaseAuthUser?
+    fun observeSessionStatus(): Flow<SupabaseAuthSessionStatus>
     fun signOut()
     suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess
     suspend fun signUpWithEmail(displayName: String, email: String, password: String): SupabaseAuthSuccess
@@ -41,10 +48,20 @@ data class SupabaseAuthUser(
     val identityCount: Int? = null,
 )
 
+sealed class SupabaseAuthSessionStatus {
+    object Loading: SupabaseAuthSessionStatus()
+    data class Authenticated(val user: SupabaseAuthUser? = null): SupabaseAuthSessionStatus()
+    object Unauthenticated: SupabaseAuthSessionStatus()
+    object NetworkError: SupabaseAuthSessionStatus()
+}
+
 object EmptySupabaseAuthSessionClient : SupabaseAuthSessionClient {
     override val isPlaceholder: Boolean = true
 
     override fun currentUserOrNull(): SupabaseAuthUser? = null
+    override fun observeSessionStatus(): Flow<SupabaseAuthSessionStatus> =
+        flowOf(SupabaseAuthSessionStatus.Unauthenticated)
+
     override fun signOut() {}
 
     override suspend fun signInWithEmail(email: String, password: String): SupabaseAuthSuccess {
@@ -135,6 +152,15 @@ class SupabaseAuthRemoteDataSource(
         }
     }
 
+    override fun observeAuthState(): Flow<AuthState> {
+        return sessionClient.observeSessionStatus()
+            .map { status -> status.toAuthState() }
+            .catch { e ->
+                if (e is CancellationException) throw e
+                emit(AuthState.AuthError(ErrorCode.UNEXPECTED_FAILURE))
+            }
+    }
+
     override fun getCurrentUser(): User? {
         return sessionClient.currentUserOrNull()?.toDomainUser()
     }
@@ -157,6 +183,15 @@ class SupabaseAuthRemoteDataSource(
             about = "",
             website = "",
         )
+    }
+
+    private fun SupabaseAuthSessionStatus.toAuthState(): AuthState {
+        return when (this) {
+            SupabaseAuthSessionStatus.Loading -> AuthState.Loading
+            is SupabaseAuthSessionStatus.Authenticated -> AuthState.Authenticated
+            SupabaseAuthSessionStatus.Unauthenticated -> AuthState.Unauthenticated
+            SupabaseAuthSessionStatus.NetworkError -> AuthState.AuthError(ErrorCode.NETWORK_ERROR)
+        }
     }
 
     private suspend fun runAuthCall(block: suspend () -> SupabaseAuthSuccess): AuthRemoteResult {

@@ -34,26 +34,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
-
-            val currentUser = try {
-                authRepository.getCurrentUser()
+            try {
+                authRepository.observeAuthState().collect { state ->
+                    _authState.value = state
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                println("AUTH_BOOTSTRAP: current user lookup failed: ${e.message}")
-                null
-            }
-
-            if (currentUser != null) {
-                _authState.value = AuthState.Authenticated
-            }else{
+                println("AUTH_BOOTSTRAP: auth state observation failed: ${e.message}")
                 _authState.value = AuthState.Unauthenticated
             }
-
-            /* To test if start navigation function is working */
-//            signIn("test@test.com","test123") /* for test only */
-            /* ----------------------------------------------- */
         }
     }
 

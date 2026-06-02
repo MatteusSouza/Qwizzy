@@ -5,6 +5,8 @@ import com.example.askceny.data.remote.api.AuthRemoteResult
 import com.example.askceny.domain.models.User
 import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -315,6 +317,18 @@ class AuthRepositoryImplTest {
     }
 
     @Test
+    fun `auth state observation delegates to remote data source`() = runTest {
+        val remoteDataSource = RecordingAuthRemoteDataSource(
+            observedAuthStates = listOf(AuthState.Loading, AuthState.Authenticated)
+        )
+        val repository = AuthRepositoryImpl(remoteDataSource)
+
+        val result = repository.observeAuthState().toList()
+
+        assertEquals(listOf(AuthState.Loading, AuthState.Authenticated), result)
+    }
+
+    @Test
     fun `sign-out delegates to Supabase remote data source`() {
         val remoteDataSource = RecordingAuthRemoteDataSource(currentUser = sampleUser)
         val repository = AuthRepositoryImpl(remoteDataSource)
@@ -364,6 +378,9 @@ class AuthRepositoryImplTest {
         private val verifyEmailOtpResult: AuthRemoteResult = AuthRemoteResult.Authenticated(sampleUser),
         private val resendSignUpEmailOtpResult: AuthRemoteResult = AuthRemoteResult.EmailConfirmationRequired(sampleUser),
         private val currentUser: User? = sampleUser,
+        private val observedAuthStates: List<AuthState> = listOf(
+            if (currentUser != null) AuthState.Authenticated else AuthState.Unauthenticated
+        ),
     ) : AuthRemoteDataSource {
         var emailSignUpRequest: EmailSignUpRequest? = null
             private set
@@ -409,6 +426,8 @@ class AuthRepositoryImplTest {
             resendSignUpEmailOtpRequest = email
             return resendSignUpEmailOtpResult
         }
+
+        override fun observeAuthState() = flowOf(*observedAuthStates.toTypedArray())
 
         override fun getCurrentUser(): User? = currentUser
 

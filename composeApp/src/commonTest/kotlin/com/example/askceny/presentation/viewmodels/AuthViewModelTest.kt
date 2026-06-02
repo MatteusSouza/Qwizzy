@@ -6,6 +6,8 @@ import com.example.askceny.domain.types.AuthState
 import com.example.askceny.domain.types.ErrorCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -43,6 +45,46 @@ class AuthViewModelTest {
 
         try {
             val viewModel = AuthViewModel(FailingBootstrapAuthRepository())
+
+            assertEquals(AuthState.Loading, viewModel.authState.value)
+            advanceUntilIdle()
+            assertEquals(AuthState.Unauthenticated, viewModel.authState.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `auth bootstrap restores authenticated session from observed state`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    observedAuthStates = listOf(AuthState.Loading, AuthState.Authenticated)
+                )
+            )
+
+            assertEquals(AuthState.Loading, viewModel.authState.value)
+            advanceUntilIdle()
+            assertEquals(AuthState.Authenticated, viewModel.authState.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `auth bootstrap resolves unauthenticated when observed state has no session`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            val viewModel = AuthViewModel(
+                RecordingAuthRepository(
+                    observedAuthStates = listOf(AuthState.Loading, AuthState.Unauthenticated)
+                )
+            )
 
             assertEquals(AuthState.Loading, viewModel.authState.value)
             advanceUntilIdle()
@@ -464,6 +506,10 @@ class AuthViewModelTest {
             return AuthState.Unauthenticated
         }
 
+        override fun observeAuthState() = flow<AuthState> {
+            error("Session observation failed")
+        }
+
         override fun getCurrentUser(): User? {
             error("Session lookup failed")
         }
@@ -476,6 +522,7 @@ class AuthViewModelTest {
         private val signUpResult: AuthState = AuthState.Authenticated,
         private val verifyEmailOtpResult: AuthState = AuthState.Authenticated,
         private val resendSignUpEmailOtpResult: AuthState = AuthState.Unauthenticated,
+        private val observedAuthStates: List<AuthState> = listOf(AuthState.Unauthenticated),
     ) : AuthRepository {
         var signInCalls = 0
             private set
@@ -516,6 +563,8 @@ class AuthViewModelTest {
             resendSignUpEmailOtpRequest = email
             return resendSignUpEmailOtpResult
         }
+
+        override fun observeAuthState() = flowOf(*observedAuthStates.toTypedArray())
 
         override fun getCurrentUser(): User? = null
 

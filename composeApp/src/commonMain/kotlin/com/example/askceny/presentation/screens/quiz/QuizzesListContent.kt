@@ -1,4 +1,4 @@
-package com.example.askceny.presentation.composables
+package com.example.askceny.presentation.screens.quiz
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.askceny.presentation.components.QuizCard
 import com.example.askceny.presentation.preview.SampleUiState
 import com.example.askceny.presentation.state.QuizUiModel
 import com.example.askceny.presentation.state.QuizzesListUiState

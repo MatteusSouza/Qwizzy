@@ -1,4 +1,4 @@
-package com.example.askceny.presentation.composables
+package com.example.askceny.presentation.screens.auth
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

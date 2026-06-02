@@ -1,4 +1,4 @@
-package com.example.askceny.presentation.composables
+package com.example.askceny.presentation.components
 
 import androidx.compose.runtime.Composable
 
